@@ -1,0 +1,98 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="adb.exe" />
+    <None Remove="AdbWinApi.dll" />
+    <None Remove="AdbWinUsbApi.dll" />
+    <None Remove="dmtracedump.exe" />
+    <None Remove="etc1tool.exe" />
+    <None Remove="fastboot.exe" />
+    <None Remove="gen_font\ocr.omc" />
+    <None Remove="hprof-conv.exe" />
+    <None Remove="libwinpthread-1.dll" />
+    <None Remove="make_f2fs.exe" />
+    <None Remove="make_f2fs_casefold.exe" />
+    <None Remove="mke2fs.conf" />
+    <None Remove="mke2fs.exe" />
+    <None Remove="NOTICE.txt" />
+    <None Remove="screen.jpg" />
+    <None Remove="screen.png" />
+    <None Remove="source.properties" />
+    <None Remove="sqlite3.exe" />
+    <None Remove="vision.hdev" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="adb.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="AdbWinApi.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="AdbWinUsbApi.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="dmtracedump.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="etc1tool.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="fastboot.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="gen_font\ocr.omc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="hprof-conv.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="libwinpthread-1.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="make_f2fs.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="make_f2fs_casefold.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="mke2fs.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="mke2fs.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="NOTICE.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="screen.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="source.properties">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="sqlite3.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="vision.hdev">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="halcondotnet">
+      <HintPath>..\..\..\..\Repo_ctpFalcon\VS projekter\Extern dll\Halcon 13.0.4\halcondotnet.dll</HintPath>
+    </Reference>
+    <Reference Include="hdevenginedotnet">
+      <HintPath>..\..\..\..\Repo_ctpFalcon\VS projekter\Extern dll\Halcon 13.0.4\hdevenginedotnet.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

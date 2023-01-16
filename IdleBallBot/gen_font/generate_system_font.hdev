@@ -1,0 +1,1147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="13.0.4">
+<procedure name="main">
+<interface/>
+<body>
+<c>* This example program shows how to create OCR training samples from system fonts.</c>
+<c>* First, the samples are created from the specified system font. Then, the</c>
+<c>* samples are artificially altered and distorted to increase the number of</c>
+<c>* different training samples for each class. Finally, an OCR classifier is</c>
+<c>* trained with the created OCR training samples.</c>
+<c>* </c>
+<l>dev_close_window ()</l>
+<l>dev_open_window (0, 0, 640, 480, 'white', WindowHandle)</l>
+<c>* </c>
+<c>* Determine available font similar to Arial</c>
+<l>set_display_font (WindowHandle, 14, ['Russo One','Garuda','Luxi Sans','DejaVu Sans','FreeSans'], 'false', 'false')</l>
+<l>get_font (WindowHandle, Font)</l>
+<l>FontName := regexp_replace(Font,'-[^-]+-[^-]+$','')</l>
+<c>* </c>
+<c>* Define font size and typeface (out of 'Regular', 'Bold', 'Italic', 'BoldItalic')</c>
+<l>FontSize := 40</l>
+<l>FontTypeface := ['Regular','Bold']</l>
+<c>* </c>
+<c>* Define symbols that will be created</c>
+<l>OrdsNumbers := [48:57]</l>
+<l>OrdsUpperCaseLetters := [65:90]</l>
+<l>OrdsLowerCaseLetters := [97:122]</l>
+<l>Symbols := chr([OrdsNumbers,OrdsUpperCaseLetters,OrdsLowerCaseLetters])</l>
+<l>Symbols := [Symbols,'$','.',',']</l>
+<c>* </c>
+<c>* Define mode</c>
+<l>IndependentDeformations := true</l>
+<c>* </c>
+<c>* Initialization</c>
+<l>set_display_font (WindowHandle, 14, 'sans', 'true', 'false')</l>
+<c>* </c>
+<c>* Display some information</c>
+<l>Message := 'This example program shows how to create OCR training samples\nfrom system fonts.\n \nFirst, the samples are created from the specified system font.\nThen, the samples are artificially altered and distorted to increase\nthe number of different training samples for each class.\n \nFinally, an OCR classifier is trained with the created OCR\ntraining samples.'</l>
+<l>Settings := ['Current settings:','','- FontName: ' + sum(FontName + ' '),'- FontSize: ' + sum(FontSize + ' '),'- Typeface: ' + sum(FontTypeface + ' ')]</l>
+<l>dev_clear_window ()</l>
+<l>disp_message (WindowHandle, [Message,'\n \n',Settings], 'window', 12, 12, 'black', 'false')</l>
+<l>disp_continue_message (WindowHandle, 'black', 'true')</l>
+<l>stop ()</l>
+<c>* </c>
+<c>* Create character samples</c>
+<l>dev_clear_window ()</l>
+<l>disp_message (WindowHandle, 'Create samples...', 'window', 12, 12, 'black', 'false')</l>
+<l>try</l>
+<l>    gen_character_samples (Characters, Symbols, FontName, FontSize, FontTypeface, Classes, MaxFontWidth, MaxFontHeight)</l>
+<l>catch (Exception)</l>
+<l>    throw (Exception)</l>
+<l>endtry</l>
+<l>copy_obj (Characters, AllCharacters, 1, -1)</l>
+<l>AllClasses := Classes</l>
+<c>* </c>
+<c>* Simulate variations of the stroke width</c>
+<l>dev_clear_window ()</l>
+<l>disp_message (WindowHandle, 'Simulate variations of the stroke width...', 'window', 12, 12, 'black', 'false')</l>
+<l>if (IndependentDeformations)</l>
+<l>    simulate_character_stroke_width (Characters, CharactersStrokeWidth, Classes, 0.5, 1.5, ClassesStrokeWidth)</l>
+<l>else</l>
+<l>    simulate_character_stroke_width (AllCharacters, CharactersStrokeWidth, AllClasses, 0.7, 1.3, ClassesStrokeWidth)</l>
+<l>endif</l>
+<l>concat_obj (AllCharacters, CharactersStrokeWidth, AllCharacters)</l>
+<l>AllClasses := [AllClasses,ClassesStrokeWidth]</l>
+<c>* </c>
+<c>* Simulate radial deformations</c>
+<l>dev_clear_window ()</l>
+<l>disp_message (WindowHandle, 'Simulate radial deformations...', 'window', 12, 12, 'black', 'false')</l>
+<l>if (IndependentDeformations)</l>
+<l>    simulate_character_radial_deformation (Characters, CharactersRadDeformed, Classes, ClassesRadDeformed)</l>
+<l>else</l>
+<l>    simulate_character_radial_deformation (AllCharacters, CharactersRadDeformed, AllClasses, ClassesRadDeformed)</l>
+<l>endif</l>
+<l>concat_obj (AllCharacters, CharactersRadDeformed, AllCharacters)</l>
+<l>AllClasses := [AllClasses,ClassesRadDeformed]</l>
+<c>* </c>
+<c>* Simulate local deformations</c>
+<l>dev_clear_window ()</l>
+<l>disp_message (WindowHandle, 'Simulate local deformations...', 'window', 12, 12, 'black', 'false')</l>
+<l>if (IndependentDeformations)</l>
+<l>    simulate_character_local_deformation (Characters, CharactersLocDeformed, Classes, 20, 1.5 * MaxFontWidth / 100.0, 2.0, ClassesLocDeformed)</l>
+<l>else</l>
+<l>    simulate_character_local_deformation (AllCharacters, CharactersLocDeformed, AllClasses, 3, 1.5 * MaxFontWidth / 100.0, 2.0, ClassesLocDeformed)</l>
+<l>endif</l>
+<l>concat_obj (AllCharacters, CharactersLocDeformed, AllCharacters)</l>
+<l>AllClasses := [AllClasses,ClassesLocDeformed]</l>
+<c>* </c>
+<c>* Simulate segmentation errors</c>
+<l>dev_clear_window ()</l>
+<l>disp_message (WindowHandle, 'Simulate segmentation errors...', 'window', 12, 12, 'black', 'false')</l>
+<l>if (IndependentDeformations)</l>
+<l>    simulate_character_segmentation_error (Characters, CharactersSegmError, Classes, 10 * MaxFontWidth / 100.0, 10 * MaxFontWidth / 100.0, 1, 1, ClassesSegmError)</l>
+<l>else</l>
+<l>    simulate_character_segmentation_error (AllCharacters, CharactersSegmError, AllClasses, 10 * MaxFontWidth / 100.0, 10 * MaxFontWidth / 100.0, 1, 1, ClassesSegmError)</l>
+<l>endif</l>
+<l>concat_obj (AllCharacters, CharactersSegmError, AllCharacters)</l>
+<l>AllClasses := [AllClasses,ClassesSegmError]</l>
+<c>* </c>
+<c>* Simulate shear</c>
+<l>dev_clear_window ()</l>
+<l>disp_message (WindowHandle, 'Simulate shear...', 'window', 12, 12, 'black', 'false')</l>
+<l>if (IndependentDeformations)</l>
+<l>    simulate_character_shear (Characters, CharactersSheared, Classes, 10, ClassesSheared)</l>
+<l>else</l>
+<l>    simulate_character_shear (AllCharacters, CharactersSheared, AllClasses, 10, ClassesSheared)</l>
+<l>endif</l>
+<l>concat_obj (AllCharacters, CharactersSheared, AllCharacters)</l>
+<l>AllClasses := [AllClasses,ClassesSheared]</l>
+<c>* </c>
+<c>* Simulate rotation</c>
+<l>dev_clear_window ()</l>
+<l>disp_message (WindowHandle, 'Simulate rotation...', 'window', 12, 12, 'black', 'false')</l>
+<l>if (IndependentDeformations)</l>
+<l>    simulate_character_rotation (Characters, CharactersRotated, Classes, 10, ClassesRotated)</l>
+<l>else</l>
+<l>    simulate_character_rotation (AllCharacters, CharactersRotated, AllClasses, 10, ClassesRotated)</l>
+<l>endif</l>
+<l>concat_obj (AllCharacters, CharactersRotated, AllCharacters)</l>
+<l>AllClasses := [AllClasses,ClassesRotated]</l>
+<c>* </c>
+<c>* Eliminate duplicate samples</c>
+<l>eliminate_duplicate_samples (AllCharacters, AllCharactersWithoutDup, AllClasses, AllClassesWithoutDup)</l>
+<c>* </c>
+<c>* Sort all characters and write them to file</c>
+<l>Indices := sort_index(AllClassesWithoutDup)</l>
+<l>select_obj (AllCharactersWithoutDup, SortedCharacters, Indices + 1)</l>
+<l>SortedClasses := subset(AllClassesWithoutDup,Indices)</l>
+<l>write_ocr_trainf_image (SortedCharacters, SortedClasses, 'train_ocr')</l>
+<c>* </c>
+<c>* Shuffle characters (this may speed up the training)</c>
+<l>shuffle_trainfile ('train_ocr', 'train_ocr_shuffle')</l>
+<c>* </c>
+<c>* Train OCR classifier and write it to file</c>
+<l>dev_clear_window ()</l>
+<l>disp_message (WindowHandle, ['Train the OCR classifier...','(Please check status bar for progress)'], 'window', 12, 12, 'black', 'false')</l>
+<l>create_ocr_class_mlp (8, 10, 'constant', ['gradient_8dir','pixel_invar','ratio'], Symbols, 80, 'none', 10, 42, OCRHandle)</l>
+<l>trainf_ocr_class_mlp (OCRHandle, 'train_ocr_shuffle.trf', 2000, 1, 0.01, Error, ErrorLog)</l>
+<l>write_ocr_class_mlp (OCRHandle, 'ocr')</l>
+<l>clear_ocr_class_mlp (OCRHandle)</l>
+<c>* </c>
+<c>* Test OCR classifier</c>
+<l>read_ocr_class_mlp ('ocr', OCRHandle)</l>
+<l>create_text_model_reader ('manual', [], TextModel)</l>
+<c>* </c>
+<l>set_text_model_param (TextModel, 'char_width', 60)</l>
+<l>set_text_model_param (TextModel, 'char_height', 60)</l>
+<l>set_text_model_param (TextModel, 'stroke_width', 14)</l>
+<l>set_text_model_param (TextModel, 'fragment_size_min', 10)</l>
+<c>* </c>
+<l>dev_update_off ()</l>
+<l>set_display_font (WindowHandle, 14, 'sans', 'true', 'false')</l>
+<l>read_image (Image, 'fonts/arial_a1')</l>
+<l>dev_resize_window_fit_image (Image, 0, 0, 900, 480)</l>
+<l>Ref := ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9']</l>
+<l>for Index := 1 to 9 by 1</l>
+<l>    read_image (ImageOrig, 'C:/Users/gummi/Desktop/IdleBot/Screenshot 2023-01-15 180618.png')</l>
+<l>    dev_display (ImageOrig)</l>
+<c>    * Use gray value erosion to close small gaps within characters</c>
+<l>    gray_erosion_shape (ImageOrig, Image, 3, 3, 'octagon')</l>
+<l>    find_text (Image, TextModel, TextResultID)</l>
+<l>    get_text_object (CharactersSegm, TextResultID, 'all_lines')</l>
+<l>    clear_text_result (TextResultID)</l>
+<l>    do_ocr_multi_class_mlp (CharactersSegm, Image, OCRHandle, Class, Confidence)</l>
+<l>    smallest_rectangle1 (CharactersSegm, Row1, Column1, Row2, Column2)</l>
+<c>    * </c>
+<l>    for Index1 := 0 to |Row1| - 1 by 1</l>
+<l>        if (Class[Index1] == Ref[Index1])</l>
+<l>            ResultColor := 'forest green'</l>
+<l>        else</l>
+<l>            ResultColor := 'coral'</l>
+<l>        endif</l>
+<l>        disp_message (WindowHandle, Class[Index1], 'image', Row2[Index1], Column1[Index1], ResultColor, 'false')</l>
+<l>    endfor</l>
+<l>    if (Index &lt; 9)</l>
+<l>        disp_continue_message (WindowHandle, 'black', 'true')</l>
+<l>        stop ()</l>
+<l>    endif</l>
+<l>endfor</l>
+<l>clear_text_model (TextModel)</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="gen_character_samples">
+<interface>
+<oo>
+<par name="Characters" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Symbols" base_type="ctrl" dimension="0"/>
+<par name="FontName" base_type="ctrl" dimension="0"/>
+<par name="FontSize" base_type="ctrl" dimension="0"/>
+<par name="FontTypeface" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Classes" base_type="ctrl" dimension="0"/>
+<par name="MaxFontWidth" base_type="ctrl" dimension="0"/>
+<par name="MaxFontHeight" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure generates OCR training samples from system fonts</c>
+<c>* </c>
+<l>dev_update_off ()</l>
+<l>gen_empty_obj (Characters)</l>
+<l>Classes := []</l>
+<l>MaxFontWidth := 0</l>
+<l>MaxFontHeight := 0</l>
+<l>get_system ('operating_system', OS)</l>
+<l>for IndexTF := 0 to |FontTypeface| - 1 by 1</l>
+<c>    * Check for correct Typeface</c>
+<l>    if (regexp_test(FontTypeface[IndexTF],'^(Regular|Italic|Bold|BoldItalic)$') == 0)</l>
+<l>        throw ('Wrong value for Parameter FontTypeface: ' + FontTypeface[IndexTF])</l>
+<l>    endif</l>
+<l>    if (regexp_test(FontTypeface[IndexTF],'Bold') &gt; 0)</l>
+<l>        Bold := 'true'</l>
+<l>    else</l>
+<l>        Bold := 'false'</l>
+<l>    endif</l>
+<l>    if (regexp_test(FontTypeface[IndexTF],'Italic') &gt; 0)</l>
+<l>        Slant := 'true'</l>
+<l>    else</l>
+<l>        Slant := 'false'</l>
+<l>    endif</l>
+<l>    tuple_regexp_test (FontTypeface[IndexTF], 'Bold', NumMatchesBold)</l>
+<l>    tuple_regexp_test (FontTypeface[IndexTF], 'Italic', NumMatchesSlant)</l>
+<l>    for IndexFN := 0 to |FontName| - 1 by 1</l>
+<l>        for IndexFS := 0 to |FontSize| - 1 by 1</l>
+<l>            open_window (0, 0, 10, 10, 0, 'invisible', '', WindowHandleFont)</l>
+<c>            * </c>
+<l>            try</l>
+<l>                set_display_font (WindowHandleFont, FontSize[IndexFS], FontName[IndexFN], Bold, Slant)</l>
+<l>            catch (Exception)</l>
+<l>            endtry</l>
+<l>            get_font_extents (WindowHandleFont, MaxAscent, MaxDescent, MaxWidth, MaxHeight)</l>
+<l>            MaxFontWidth := max([MaxFontWidth,MaxWidth])</l>
+<l>            MaxFontHeight := max([MaxFontHeight,MaxHeight])</l>
+<l>            close_window (WindowHandleFont)</l>
+<c>            * Create character samples</c>
+<l>            set_window_attr ('background_color', 'white')</l>
+<l>            if (OS{0:2} == 'Win')</l>
+<l>                open_window (0, 0, 3 * MaxWidth, 3 * MaxHeight, 0, 'invisible', '', WindowHandleCharacterSample)</l>
+<l>            else</l>
+<l>                dev_open_window (100, 0, 3 * MaxWidth, 3 * MaxHeight, 'white', WindowHandleCharacterSample)</l>
+<l>            endif</l>
+<l>            set_part (WindowHandleCharacterSample, 0, 0, -1, -1)</l>
+<c>            * </c>
+<l>            set_display_font (WindowHandleCharacterSample, FontSize[IndexFS], FontName[IndexFN], Bold, Slant)</l>
+<c>            * </c>
+<l>            set_gray (WindowHandleCharacterSample, 0)</l>
+<l>            for IndexS := 0 to |Symbols| - 1 by 1</l>
+<l>                clear_window (WindowHandleCharacterSample)</l>
+<l>                set_tposition (WindowHandleCharacterSample, 1 * MaxHeight, 1 * MaxWidth)</l>
+<l>                write_string (WindowHandleCharacterSample, Symbols[IndexS])</l>
+<l>                dump_window_image (Image, WindowHandleCharacterSample)</l>
+<l>                count_channels (Image, NumChannels)</l>
+<l>                if (NumChannels &gt; 1)</l>
+<l>                    rgb1_to_gray (Image, Image)</l>
+<l>                endif</l>
+<l>                threshold (Image, Region, 0, 254)</l>
+<l>                reduce_domain (Image, Region, ImageReduced)</l>
+<l>                crop_domain_rel (ImageReduced, ImagePart, -1, -1, -1, -1)</l>
+<l>                Classes := [Classes,Symbols[IndexS]]</l>
+<l>                concat_obj (Characters, ImagePart, Characters)</l>
+<l>            endfor</l>
+<c>            * </c>
+<l>            if (OS{0:2} == 'Win')</l>
+<l>                close_window (WindowHandleCharacterSample)</l>
+<l>            else</l>
+<l>                dev_close_window ()</l>
+<l>            endif</l>
+<l>        endfor</l>
+<l>    endfor</l>
+<l>endfor</l>
+<l>return ()</l>
+</body>
+<docu id="gen_character_samples">
+<short lang="en_US">Create OCR training samples from system fonts.</short>
+<parameters>
+<parameter id="Characters"/>
+<parameter id="Classes"/>
+<parameter id="FontName"/>
+<parameter id="FontSize"/>
+<parameter id="FontTypeface"/>
+<parameter id="MaxFontHeight"/>
+<parameter id="MaxFontWidth"/>
+<parameter id="Symbols"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="simulate_character_local_deformation">
+<interface>
+<io>
+<par name="Characters" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="CharactersLocDeformed" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Classes" base_type="ctrl" dimension="0"/>
+<par name="NumVariations" base_type="ctrl" dimension="0"/>
+<par name="MaxDeformation" base_type="ctrl" dimension="0"/>
+<par name="MaxDeformationFrequency" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ClassesLocDeformed" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure simulates local deformations of the given characters.</c>
+<c>* </c>
+<l>gen_empty_obj (CharactersLocDeformed)</l>
+<l>ClassesLocDeformed := []</l>
+<l>gen_empty_obj (ObjTmp)</l>
+<l>ClassesTmp := []</l>
+<l>count_obj (Characters, Number)</l>
+<l>for Index1 := 1 to Number by 1</l>
+<l>    select_obj (Characters, ObjectSelected, Index1)</l>
+<l>    Class := Classes[Index1 - 1]</l>
+<l>    for Index2 := 1 to NumVariations by 1</l>
+<l>        try</l>
+<l>            deform_one_character_sample (ObjectSelected, CharacterDeformed, MaxDeformation, MaxDeformationFrequency)</l>
+<l>        catch (Exception)</l>
+<l>            continue</l>
+<l>        endtry</l>
+<l>        check_sample_quality (CharacterDeformed, 10, 0.1, 4, 4, 50, IsOK, RejectReason)</l>
+<l>        if (not IsOK)</l>
+<l>            continue</l>
+<l>        endif</l>
+<l>        concat_obj (ObjTmp, CharacterDeformed, ObjTmp)</l>
+<l>        ClassesTmp := [ClassesTmp,Class]</l>
+<l>        if (|ClassesTmp| &gt;= 1024)</l>
+<l>            concat_obj (CharactersLocDeformed, ObjTmp, CharactersLocDeformed)</l>
+<l>            ClassesLocDeformed := [ClassesLocDeformed,ClassesTmp]</l>
+<l>            gen_empty_obj (ObjTmp)</l>
+<l>            ClassesTmp := []</l>
+<l>        endif</l>
+<l>    endfor</l>
+<l>endfor</l>
+<l>concat_obj (CharactersLocDeformed, ObjTmp, CharactersLocDeformed)</l>
+<l>ClassesLocDeformed := [ClassesLocDeformed,ClassesTmp]</l>
+<l>return ()</l>
+</body>
+<docu id="simulate_character_local_deformation">
+<short lang="en_US">Simulate local deformations of given OCR training samples.</short>
+<parameters>
+<parameter id="Characters"/>
+<parameter id="CharactersLocDeformed"/>
+<parameter id="Classes"/>
+<parameter id="ClassesLocDeformed"/>
+<parameter id="MaxDeformation"/>
+<parameter id="MaxDeformationFrequency"/>
+<parameter id="NumVariations"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="simulate_character_stroke_width">
+<interface>
+<io>
+<par name="Characters" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="CharactersStrokeWidth" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Classes" base_type="ctrl" dimension="0"/>
+<par name="FactorMin" base_type="ctrl" dimension="0"/>
+<par name="FactorMax" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ClassesStrokeWidth" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure simulates variations of the stroke width.</c>
+<c>* </c>
+<l>gen_empty_obj (CharactersStrokeWidth)</l>
+<l>ClassesStrokeWidth := []</l>
+<l>gen_empty_obj (ObjTmp)</l>
+<l>ClassesTmp := []</l>
+<l>count_obj (Characters, Number)</l>
+<l>for Index := 1 to Number by 1</l>
+<l>    select_obj (Characters, ObjectSelected, Index)</l>
+<l>    Class := Classes[Index - 1]</l>
+<l>    get_image_size (ObjectSelected, Width, Height)</l>
+<l>    get_domain (ObjectSelected, Domain)</l>
+<l>    distance_transform (Domain, DistanceImage, 'euclidean', 'true', Width, Height)</l>
+<l>    min_max_gray (Domain, DistanceImage, 5, Min, Max, Range)</l>
+<l>    StrokeWidth := Max * 2</l>
+<l>    StrokeWidthMin := int(floor(StrokeWidth * FactorMin))</l>
+<l>    StrokeWidthMax := int(ceil(StrokeWidth * FactorMax))</l>
+<l>    MorphList := []</l>
+<l>    for StrokeWidthMorph := StrokeWidthMin to StrokeWidthMax by 1</l>
+<l>        if (fabs(StrokeWidth - StrokeWidthMorph) &lt; 2.0)</l>
+<l>            continue</l>
+<l>        endif</l>
+<l>        MorphList := [MorphList,StrokeWidth - StrokeWidthMorph]</l>
+<l>    endfor</l>
+<l>    if (|MorphList| == 0)</l>
+<l>        continue</l>
+<l>    endif</l>
+<l>    add_border (ObjectSelected, TiledImage, int(ceil(max(fabs(MorphList)))))</l>
+<l>    gen_image_proto (TiledImage, ImageRegion, 255)</l>
+<l>    paint_region (TiledImage, ImageRegion, ImageRegion, 0, 'fill')</l>
+<l>    full_domain (TiledImage, ImageFull)</l>
+<l>    for k := 0 to |MorphList| - 1 by 1</l>
+<l>        if (MorphList[k] &lt; 0)</l>
+<l>            gray_erosion_shape (ImageFull, Morph, -MorphList[k], -MorphList[k], 'octagon')</l>
+<l>            gray_erosion_shape (ImageRegion, RegionMorph, -MorphList[k], -MorphList[k], 'octagon')</l>
+<l>        else</l>
+<l>            gray_dilation_shape (ImageFull, Morph, MorphList[k], MorphList[k], 'octagon')</l>
+<l>            gray_dilation_shape (ImageRegion, RegionMorph, MorphList[k], MorphList[k], 'octagon')</l>
+<l>        endif</l>
+<l>        threshold (RegionMorph, Region, 0, 127)</l>
+<l>        reduce_domain (Morph, Region, Morph)</l>
+<l>        check_sample_quality (Morph, 10, 0.05, 4, 4, 50, IsOK, RejectReason)</l>
+<l>        if (not IsOK)</l>
+<l>            continue</l>
+<l>        endif</l>
+<l>        crop_domain_rel (Morph, ImagePart, -1, -1, -1, -1)</l>
+<l>        concat_obj (ObjTmp, ImagePart, ObjTmp)</l>
+<l>        ClassesTmp := [ClassesTmp,Class]</l>
+<l>        if (|ClassesTmp| &gt;= 1024)</l>
+<l>            concat_obj (CharactersStrokeWidth, ObjTmp, CharactersStrokeWidth)</l>
+<l>            ClassesStrokeWidth := [ClassesStrokeWidth,ClassesTmp]</l>
+<l>            gen_empty_obj (ObjTmp)</l>
+<l>            ClassesTmp := []</l>
+<l>        endif</l>
+<l>    endfor</l>
+<l>endfor</l>
+<l>concat_obj (CharactersStrokeWidth, ObjTmp, CharactersStrokeWidth)</l>
+<l>ClassesStrokeWidth := [ClassesStrokeWidth,ClassesTmp]</l>
+<l>return ()</l>
+</body>
+<docu id="simulate_character_stroke_width">
+<short lang="en_US">Simulate variations of the stroke width of given OCR training samples.</short>
+<parameters>
+<parameter id="Characters"/>
+<parameter id="CharactersStrokeWidth"/>
+<parameter id="Classes"/>
+<parameter id="ClassesStrokeWidth"/>
+<parameter id="FactorMax"/>
+<parameter id="FactorMin"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="simulate_character_rotation">
+<interface>
+<io>
+<par name="Characters" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="CharactersRotated" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Classes" base_type="ctrl" dimension="0"/>
+<par name="MaxAngle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ClassesRotated" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure simulates character rotations.</c>
+<c>* </c>
+<l>gen_empty_obj (CharactersRotated)</l>
+<l>ClassesRotated := []</l>
+<l>gen_empty_obj (ObjTmp)</l>
+<l>ClassesTmp := []</l>
+<l>count_obj (Characters, Number)</l>
+<l>for Index := 1 to Number by 1</l>
+<l>    select_obj (Characters, ObjectSelected, Index)</l>
+<l>    Class := Classes[Index - 1]</l>
+<l>    get_image_size (ObjectSelected, Width, Height)</l>
+<l>    add_border (ObjectSelected, TiledImage, max([Width,Height]) * 0.5)</l>
+<l>    gen_image_proto (TiledImage, ImageRegion, 255)</l>
+<l>    paint_region (TiledImage, ImageRegion, ImageRegion, 0, 'fill')</l>
+<l>    for Phi := -MaxAngle to MaxAngle by MaxAngle / 2.0</l>
+<l>        if (fabs(Phi) &lt; 1e-3)</l>
+<l>            continue</l>
+<l>        endif</l>
+<l>        rotate_image (TiledImage, ImageRotate, Phi, 'constant')</l>
+<l>        rotate_image (ImageRegion, ImageRegionRotate, Phi, 'constant')</l>
+<l>        threshold (ImageRegionRotate, Region, 0, 127)</l>
+<l>        reduce_domain (ImageRotate, Region, ImageReduced)</l>
+<l>        crop_domain_rel (ImageReduced, ImagePart, -1, -1, -1, -1)</l>
+<l>        concat_obj (ObjTmp, ImagePart, ObjTmp)</l>
+<l>        ClassesTmp := [ClassesTmp,Class]</l>
+<l>        if (|ClassesTmp| &gt;= 1024)</l>
+<l>            concat_obj (CharactersRotated, ObjTmp, CharactersRotated)</l>
+<l>            ClassesRotated := [ClassesRotated,ClassesTmp]</l>
+<l>            gen_empty_obj (ObjTmp)</l>
+<l>            ClassesTmp := []</l>
+<l>        endif</l>
+<l>    endfor</l>
+<l>endfor</l>
+<l>concat_obj (CharactersRotated, ObjTmp, CharactersRotated)</l>
+<l>ClassesRotated := [ClassesRotated,ClassesTmp]</l>
+<l>return ()</l>
+</body>
+<docu id="simulate_character_rotation">
+<short lang="en_US">Simulate rotations of given OCR training samples.</short>
+<parameters>
+<parameter id="Characters"/>
+<parameter id="CharactersRotated"/>
+<parameter id="Classes"/>
+<parameter id="ClassesRotated"/>
+<parameter id="MaxAngle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="simulate_character_shear">
+<interface>
+<io>
+<par name="Characters" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="CharactersSheared" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Classes" base_type="ctrl" dimension="0"/>
+<par name="MaxAngle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ClassesSheared" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure simulates character shear.</c>
+<c>* </c>
+<l>gen_empty_obj (CharactersSheared)</l>
+<l>ClassesSheared := []</l>
+<l>gen_empty_obj (ObjTmp)</l>
+<l>ClassesTmp := []</l>
+<l>count_obj (Characters, Number)</l>
+<l>hom_mat2d_identity (HomMat2DIdentity)</l>
+<l>for Index := 1 to Number by 1</l>
+<l>    select_obj (Characters, ObjectSelected, Index)</l>
+<l>    Class := Classes[Index - 1]</l>
+<l>    get_image_size (ObjectSelected, Width, Height)</l>
+<l>    add_border (ObjectSelected, TiledImage, max([Width,Height]) * 0.5)</l>
+<l>    gen_image_proto (TiledImage, ImageRegion, 255)</l>
+<l>    paint_region (TiledImage, ImageRegion, ImageRegion, 0, 'fill')</l>
+<l>    for Phi := -MaxAngle to MaxAngle by MaxAngle / 2.0</l>
+<l>        if (fabs(Phi) &lt; 1e-3)</l>
+<l>            continue</l>
+<l>        endif</l>
+<l>        hom_mat2d_slant (HomMat2DIdentity, rad(Phi), 'x', Height / 2, Width / 2, HomMat2DSlant)</l>
+<l>        affine_trans_image (TiledImage, ImageAffineTrans, HomMat2DSlant, 'constant', 'false')</l>
+<l>        affine_trans_image (ImageRegion, ImageRegionAffineTrans, HomMat2DSlant, 'constant', 'false')</l>
+<l>        threshold (ImageRegionAffineTrans, Region, 0, 127)</l>
+<l>        reduce_domain (ImageAffineTrans, Region, ImageReduced)</l>
+<l>        crop_domain_rel (ImageReduced, ImagePart, -1, -1, -1, -1)</l>
+<l>        concat_obj (ObjTmp, ImagePart, ObjTmp)</l>
+<l>        ClassesTmp := [ClassesTmp,Class]</l>
+<l>        if (|ClassesTmp| &gt;= 1024)</l>
+<l>            concat_obj (CharactersSheared, ObjTmp, CharactersSheared)</l>
+<l>            ClassesSheared := [ClassesSheared,ClassesTmp]</l>
+<l>            gen_empty_obj (ObjTmp)</l>
+<l>            ClassesTmp := []</l>
+<l>        endif</l>
+<l>    endfor</l>
+<l>endfor</l>
+<l>concat_obj (CharactersSheared, ObjTmp, CharactersSheared)</l>
+<l>ClassesSheared := [ClassesSheared,ClassesTmp]</l>
+<l>return ()</l>
+</body>
+<docu id="simulate_character_shear">
+<short lang="en_US">Simulate shear of given OCR training samples.</short>
+<parameters>
+<parameter id="Characters"/>
+<parameter id="CharactersSheared"/>
+<parameter id="Classes"/>
+<parameter id="ClassesSheared"/>
+<parameter id="MaxAngle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="simulate_character_radial_deformation">
+<interface>
+<io>
+<par name="Characters" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="CharactersRadDeformed" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Classes" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ClassesRadDeformed" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure simulates radial deformations of the given characters.</c>
+<c>* </c>
+<l>gen_empty_obj (CharactersRadDeformed)</l>
+<l>ClassesRadDeformed := []</l>
+<l>gen_empty_obj (ObjTmp)</l>
+<l>ClassesTmp := []</l>
+<l>count_obj (Characters, Number)</l>
+<l>get_image_size (Characters, WidthAll, HeightAll)</l>
+<l>WidthTiled := max(WidthAll) * 2</l>
+<l>HeightTiled := max(HeightAll) * 2</l>
+<c>* create deformation maps</c>
+<l>gen_empty_obj (Maps)</l>
+<l>for W := WidthTiled / 10.0 * 2.0 to WidthTiled / 10.0 * 8.0 + 1e-5 by WidthTiled / 10.0 * 3.0</l>
+<l>    for H := HeightTiled / 10.0 * 2.0 to HeightTiled / 10.0 * 8.0 + 1e-5 by HeightTiled / 10.0 * 3.0</l>
+<l>        Kappa := 100000000.0 / HeightTiled</l>
+<l>        gen_cam_par_area_scan_division (0.01, Kappa, 6e-06, 6e-06, W, H, WidthTiled, HeightTiled, CamParIn)</l>
+<l>        change_radial_distortion_cam_par ('adaptive', CamParIn, 0, CamParOut)</l>
+<l>        gen_radial_distortion_map (Map, CamParIn, CamParOut, 'bilinear')</l>
+<l>        concat_obj (Maps, Map, Maps)</l>
+<l>    endfor</l>
+<l>endfor</l>
+<c>* deform characters</c>
+<l>count_obj (Maps, NumberMaps)</l>
+<l>for Index := 1 to Number by 1</l>
+<l>    select_obj (Characters, ObjectSelected, Index)</l>
+<l>    Class := Classes[Index - 1]</l>
+<l>    add_border_size (ObjectSelected, TiledImage, WidthTiled, HeightTiled)</l>
+<l>    gen_image_proto (TiledImage, ImageRegion, 255)</l>
+<l>    paint_region (TiledImage, ImageRegion, ImageRegion, 0, 'fill')</l>
+<l>    full_domain (TiledImage, ImageFull)</l>
+<l>    for MapIdx := 1 to NumberMaps by 1</l>
+<l>        select_obj (Maps, Map, MapIdx)</l>
+<l>        map_image (ImageFull, Map, ImageMapped)</l>
+<l>        map_image (ImageRegion, Map, ImageRegionMapped)</l>
+<l>        threshold (ImageRegionMapped, Region, 0, 127)</l>
+<l>        reduce_domain (ImageMapped, Region, ImageReduced)</l>
+<l>        crop_domain_rel (ImageReduced, ImagePart, -1, -1, -1, -1)</l>
+<l>        concat_obj (ObjTmp, ImagePart, ObjTmp)</l>
+<l>        ClassesTmp := [ClassesTmp,Class]</l>
+<l>        if (|ClassesTmp| &gt;= 1024)</l>
+<l>            concat_obj (CharactersRadDeformed, ObjTmp, CharactersRadDeformed)</l>
+<l>            ClassesRadDeformed := [ClassesRadDeformed,ClassesTmp]</l>
+<l>            gen_empty_obj (ObjTmp)</l>
+<l>            ClassesTmp := []</l>
+<l>        endif</l>
+<l>    endfor</l>
+<l>endfor</l>
+<l>concat_obj (CharactersRadDeformed, ObjTmp, CharactersRadDeformed)</l>
+<l>ClassesRadDeformed := [ClassesRadDeformed,ClassesTmp]</l>
+<l>return ()</l>
+</body>
+<docu id="simulate_character_radial_deformation">
+<short lang="en_US">Simulate radial deformations of given OCR training samples.</short>
+<parameters>
+<parameter id="Characters"/>
+<parameter id="CharactersRadDeformed"/>
+<parameter id="Classes"/>
+<parameter id="ClassesRadDeformed"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="simulate_character_segmentation_error">
+<interface>
+<io>
+<par name="Characters" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="CharactersSegmError" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Classes" base_type="ctrl" dimension="0"/>
+<par name="MaxLeft" base_type="ctrl" dimension="0"/>
+<par name="MaxRight" base_type="ctrl" dimension="0"/>
+<par name="MaxAbove" base_type="ctrl" dimension="0"/>
+<par name="MaxBelow" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ClassesSegmError" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure simulates segmentation errors.</c>
+<c>* </c>
+<l>gen_empty_obj (CharactersSegmError)</l>
+<l>ClassesSegmError := []</l>
+<l>gen_empty_obj (ObjTmp)</l>
+<l>ClassesTmp := []</l>
+<l>count_obj (Characters, Number)</l>
+<l>for Index := 1 to Number by 1</l>
+<l>    select_obj (Characters, ObjectSelected, Index)</l>
+<l>    Class := Classes[Index - 1]</l>
+<l>    get_image_size (ObjectSelected, Width, Height)</l>
+<l>    add_border (ObjectSelected, TiledImage, max([MaxLeft,MaxRight,MaxAbove,MaxBelow]))</l>
+<l>    get_domain (TiledImage, Domain)</l>
+<l>    smallest_rectangle1 (Domain, Row1, Column1, Row2, Column2)</l>
+<l>    for Left := 1 to MaxLeft by 1</l>
+<l>        get_grayval (TiledImage, Row1, Column1 - Left, Grayval)</l>
+<l>        set_grayval (TiledImage, Row1, Column1 - Left, 127)</l>
+<l>        gen_region_points (Point, Row1, Column1 - Left)</l>
+<l>        union2 (Point, Domain, Region)</l>
+<l>        full_domain (TiledImage, ImageFull)</l>
+<l>        reduce_domain (ImageFull, Region, ImageReduced)</l>
+<l>        crop_domain_rel (ImageReduced, ImagePart, -1, -1, -1, -1)</l>
+<l>        concat_obj (ObjTmp, ImagePart, ObjTmp)</l>
+<l>        ClassesTmp := [ClassesTmp,Class]</l>
+<l>        if (|ClassesTmp| &gt;= 1024)</l>
+<l>            concat_obj (CharactersSegmError, ObjTmp, CharactersSegmError)</l>
+<l>            ClassesSegmError := [ClassesSegmError,ClassesTmp]</l>
+<l>            gen_empty_obj (ObjTmp)</l>
+<l>            ClassesTmp := []</l>
+<l>        endif</l>
+<l>        set_grayval (TiledImage, Row1, Column1 - Left, Grayval)</l>
+<l>    endfor</l>
+<l>    for Right := 1 to MaxRight by 1</l>
+<l>        get_grayval (TiledImage, Row1, Column2 + Right, Grayval)</l>
+<l>        set_grayval (TiledImage, Row1, Column2 + Right, 127)</l>
+<l>        gen_region_points (Point, Row1, Column2 + Right)</l>
+<l>        union2 (Point, Domain, Region)</l>
+<l>        full_domain (TiledImage, ImageFull)</l>
+<l>        reduce_domain (ImageFull, Region, ImageReduced)</l>
+<l>        crop_domain_rel (ImageReduced, ImagePart, -1, -1, -1, -1)</l>
+<l>        concat_obj (ObjTmp, ImagePart, ObjTmp)</l>
+<l>        ClassesTmp := [ClassesTmp,Class]</l>
+<l>        if (|ClassesTmp| &gt;= 1024)</l>
+<l>            concat_obj (CharactersSegmError, ObjTmp, CharactersSegmError)</l>
+<l>            ClassesSegmError := [ClassesSegmError,ClassesTmp]</l>
+<l>            gen_empty_obj (ObjTmp)</l>
+<l>            ClassesTmp := []</l>
+<l>        endif</l>
+<l>        set_grayval (TiledImage, Row1, Column2 + Right, Grayval)</l>
+<l>    endfor</l>
+<l>    for Above := 1 to MaxAbove by 1</l>
+<l>        get_grayval (TiledImage, Row1 - Above, Column1, Grayval)</l>
+<l>        set_grayval (TiledImage, Row1 - Above, Column1, 127)</l>
+<l>        gen_region_points (Point, Row1 - Above, Column1)</l>
+<l>        union2 (Point, Domain, Region)</l>
+<l>        full_domain (TiledImage, ImageFull)</l>
+<l>        reduce_domain (ImageFull, Region, ImageReduced)</l>
+<l>        crop_domain_rel (ImageReduced, ImagePart, -1, -1, -1, -1)</l>
+<l>        concat_obj (ObjTmp, ImagePart, ObjTmp)</l>
+<l>        ClassesTmp := [ClassesTmp,Class]</l>
+<l>        if (|ClassesTmp| &gt;= 1024)</l>
+<l>            concat_obj (CharactersSegmError, ObjTmp, CharactersSegmError)</l>
+<l>            ClassesSegmError := [ClassesSegmError,ClassesTmp]</l>
+<l>            gen_empty_obj (ObjTmp)</l>
+<l>            ClassesTmp := []</l>
+<l>        endif</l>
+<l>        set_grayval (TiledImage, Row1 - Above, Column1, Grayval)</l>
+<l>    endfor</l>
+<l>    for Below := 1 to MaxBelow by 1</l>
+<l>        get_grayval (TiledImage, Row2 + Below, Column1, Grayval)</l>
+<l>        set_grayval (TiledImage, Row2 + Below, Column1, 127)</l>
+<l>        gen_region_points (Point, Row2 + Below, Column1)</l>
+<l>        union2 (Point, Domain, Region)</l>
+<l>        full_domain (TiledImage, ImageFull)</l>
+<l>        reduce_domain (ImageFull, Region, ImageReduced)</l>
+<l>        crop_domain_rel (ImageReduced, ImagePart, -1, -1, -1, -1)</l>
+<l>        concat_obj (ObjTmp, ImagePart, ObjTmp)</l>
+<l>        ClassesTmp := [ClassesTmp,Class]</l>
+<l>        if (|ClassesTmp| &gt;= 1024)</l>
+<l>            concat_obj (CharactersSegmError, ObjTmp, CharactersSegmError)</l>
+<l>            ClassesSegmError := [ClassesSegmError,ClassesTmp]</l>
+<l>            gen_empty_obj (ObjTmp)</l>
+<l>            ClassesTmp := []</l>
+<l>        endif</l>
+<l>        set_grayval (TiledImage, Row2 + Below, Column1, Grayval)</l>
+<l>    endfor</l>
+<l>endfor</l>
+<l>concat_obj (CharactersSegmError, ObjTmp, CharactersSegmError)</l>
+<l>ClassesSegmError := [ClassesSegmError,ClassesTmp]</l>
+<l>return ()</l>
+</body>
+<docu id="simulate_character_segmentation_error">
+<short lang="en_US">Simulate segmentation errors of given OCR training samples.</short>
+<parameters>
+<parameter id="Characters"/>
+<parameter id="CharactersSegmError"/>
+<parameter id="Classes"/>
+<parameter id="ClassesSegmError"/>
+<parameter id="MaxAbove"/>
+<parameter id="MaxBelow"/>
+<parameter id="MaxLeft"/>
+<parameter id="MaxRight"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="shuffle_trainfile">
+<interface>
+<ic>
+<par name="TrainFile" base_type="ctrl" dimension="0"/>
+<par name="TrainFileShuffled" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure reorders the samples in a train file</c>
+<c>* </c>
+<l>read_ocr_trainf (CharactersOrig, TrainFile, CharacterNamesOrig)</l>
+<c>* </c>
+<c>* Samples should be added in random order, but first, there must be one sample of each class</c>
+<c>* </c>
+<c>* Determine the first sample of each class</c>
+<l>Indices := sort_index(CharacterNamesOrig)</l>
+<l>select_obj (CharactersOrig, CharactersSorted, Indices + 1)</l>
+<l>CharacterNamesSorted := subset(CharacterNamesOrig,Indices)</l>
+<l>tuple_strstr ([CharacterNamesSorted,CharacterNamesSorted[0]], [CharacterNamesSorted[|CharacterNamesSorted| - 1],CharacterNamesSorted], Position)</l>
+<l>IndicesFirst := find(Position,-1)</l>
+<l>IndicesFirst := IndicesFirst[0:|IndicesFirst| - 2]</l>
+<l>select_obj (CharactersSorted, CharactersFirst, IndicesFirst + 1)</l>
+<l>CharacterNamesFirst := subset(CharacterNamesSorted,IndicesFirst)</l>
+<c>* </c>
+<c>* Put remaining samples into random order</c>
+<l>Sequence := [0:|CharacterNamesSorted| - 1]</l>
+<l>tuple_remove (Sequence, IndicesFirst, IndicesRemaining)</l>
+<l>select_obj (CharactersSorted, CharactersRemaining, IndicesRemaining + 1)</l>
+<l>CharacterNamesRemaining := subset(CharacterNamesSorted,IndicesRemaining)</l>
+<l>IndicesRandom := sort_index(rand(|IndicesRemaining|))</l>
+<l>select_obj (CharactersRemaining, CharactersRemainingRand, IndicesRandom + 1)</l>
+<l>CharacterNamesRemainingRand := subset(CharacterNamesRemaining,IndicesRandom)</l>
+<c>* </c>
+<c>* Write reordered samples to train file</c>
+<l>concat_obj (CharactersFirst, CharactersRemainingRand, CharactersReordered)</l>
+<l>CharacterNamesReordered := [CharacterNamesFirst,CharacterNamesRemainingRand]</l>
+<l>write_ocr_trainf_image (CharactersReordered, CharacterNamesReordered, TrainFileShuffled)</l>
+<l>return ()</l>
+</body>
+<docu id="shuffle_trainfile">
+<short lang="en_US">Shuffle a train file.</short>
+<parameters>
+<parameter id="TrainFile"/>
+<parameter id="TrainFileShuffled"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="deform_one_character_sample">
+<interface>
+<io>
+<par name="Character" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="CharacterDeformed" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="MaxDeformation" base_type="ctrl" dimension="0"/>
+<par name="MaxDeformationFrequency" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure deforms one image locally</c>
+<c>* </c>
+<l>Border := int(ceil(MaxDeformation))</l>
+<l>add_border (Character, TiledImage, Border)</l>
+<l>get_image_size (TiledImage, Width, Height)</l>
+<l>gen_image_proto (TiledImage, ImageRegion, 255)</l>
+<l>paint_region (TiledImage, ImageRegion, ImageRegion, 0, 'fill')</l>
+<l>DeformationFrequency := max([rand(1) * (MaxDeformationFrequency - 1) + 1,1])</l>
+<l>create_warp_image (WarpImageRow, Width, Height, MaxDeformation, DeformationFrequency)</l>
+<l>create_warp_image (WarpImageCol, Width, Height, MaxDeformation, DeformationFrequency)</l>
+<l>real_to_vector_field (WarpImageRow, WarpImageCol, VectorField, 'vector_field_relative')</l>
+<l>full_domain (TiledImage, ImageFull)</l>
+<l>unwarp_image_vector_field (ImageFull, VectorField, ImageUnwarped)</l>
+<l>unwarp_image_vector_field (ImageRegion, VectorField, ImageRegionUnwarped)</l>
+<l>threshold (ImageRegionUnwarped, Region, 0, 127)</l>
+<l>reduce_domain (ImageUnwarped, Region, ImageReduced)</l>
+<l>crop_domain_rel (ImageReduced, CharacterDeformed, -1, -1, -1, -1)</l>
+<l>return ()</l>
+</body>
+<docu id="deform_one_character_sample">
+<short lang="en_US">Deform one image locally.</short>
+<parameters>
+<parameter id="Character"/>
+<parameter id="CharacterDeformed"/>
+<parameter id="MaxDeformation"/>
+<parameter id="MaxDeformationFrequency"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="check_sample_quality">
+<interface>
+<io>
+<par name="CharSample" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="MinGrayRange" base_type="ctrl" dimension="0"/>
+<par name="MinForground" base_type="ctrl" dimension="0"/>
+<par name="MinWidth" base_type="ctrl" dimension="0"/>
+<par name="MinHeight" base_type="ctrl" dimension="0"/>
+<par name="MaxDeviationBackground" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="IsOK" base_type="ctrl" dimension="0"/>
+<par name="RejectReason" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* This procedure checks the quality of the given OCR sample image</c>
+<c>* </c>
+<l>IsOK := true</l>
+<l>RejectReason := ''</l>
+<l>min_max_gray (CharSample, CharSample, 0, Min, Max, RangeLocal)</l>
+<l>area_center (CharSample, Area, Row, Column)</l>
+<l>get_image_size (CharSample, Width, Height)</l>
+<l>Size := Width * Height</l>
+<l>ForegroundRatio := real(Area) / Size</l>
+<l>full_domain (CharSample, ImageFull)</l>
+<l>difference (ImageFull, CharSample, RegionDifference)</l>
+<l>intensity (RegionDifference, ImageFull, MeanBackground, DeviationBackground)</l>
+<l>intensity (CharSample, ImageFull, MeanForeground, DeviationForeground)</l>
+<l>if (Max - Min &lt; MinGrayRange)</l>
+<l>    IsOK := false</l>
+<l>    RejectReason := 'low contrast'</l>
+<l>endif</l>
+<l>if (ForegroundRatio &lt; MinForground)</l>
+<l>    IsOK := false</l>
+<l>    RejectReason := 'too small region'</l>
+<l>endif</l>
+<l>if (Width &lt; MinWidth or Height &lt; MinHeight)</l>
+<l>    IsOK := false</l>
+<l>    RejectReason := 'too small image'</l>
+<l>endif</l>
+<l>if (MeanBackground &lt; MeanForeground)</l>
+<l>    IsOK := false</l>
+<l>    RejectReason := 'inverted contrast'</l>
+<l>endif</l>
+<l>if (DeviationBackground &gt; MaxDeviationBackground)</l>
+<l>    IsOK := false</l>
+<l>    RejectReason := 'textured background'</l>
+<l>endif</l>
+<l>return ()</l>
+</body>
+<docu id="check_sample_quality">
+<short lang="en_US">Check the quality of an OCR sample.</short>
+<parameters>
+<parameter id="CharSample">
+<multivalue>false</multivalue>
+<sem_type>image</sem_type>
+</parameter>
+<parameter id="IsOK">
+<default_type>integer</default_type>
+</parameter>
+<parameter id="MaxDeviationBackground">
+<default_value>50</default_value>
+</parameter>
+<parameter id="MinForground">
+<default_type>real</default_type>
+<default_value>0.1</default_value>
+<type_list>
+<item>real</item>
+</type_list>
+</parameter>
+<parameter id="MinGrayRange">
+<default_value>10</default_value>
+</parameter>
+<parameter id="MinHeight">
+<default_type>integer</default_type>
+<default_value>4</default_value>
+<sem_type>integer</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+<value_min>0</value_min>
+</parameter>
+<parameter id="MinWidth">
+<default_type>integer</default_type>
+<default_value>4</default_value>
+<sem_type>integer</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+<value_min>0</value_min>
+</parameter>
+<parameter id="RejectReason">
+<default_type>string</default_type>
+<sem_type>string</sem_type>
+<type_list>
+<item>string</item>
+</type_list>
+</parameter>
+</parameters>
+</docu>
+</procedure>
+<procedure name="add_border">
+<interface>
+<io>
+<par name="ImageIn" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="TiledImage" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Border" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure adds a border of given size around the given image</c>
+<c>* and overpaints this border with the gray value 255.</c>
+<c>* </c>
+<l>get_image_size (ImageIn, Width, Height)</l>
+<l>tile_images_offset (ImageIn, TiledImage, Border, Border, -1, -1, -1, -1, Width + 2 * Border, Height + 2 * Border)</l>
+<l>get_domain (TiledImage, Domain)</l>
+<l>get_image_size (TiledImage, WidthTiled, HeightTiled)</l>
+<l>gen_rectangle1 (Rectangle, 0, 0, HeightTiled - 1, WidthTiled - 1)</l>
+<l>difference (Rectangle, Domain, RegionDifference)</l>
+<l>overpaint_region (TiledImage, RegionDifference, 255, 'fill')</l>
+<l>get_image_size (TiledImage, WidthFull, HeightFull)</l>
+<l>return ()</l>
+</body>
+<docu id="add_border">
+<short lang="en_US">Add border of given size around an image.</short>
+<parameters>
+<parameter id="Border"/>
+<parameter id="ImageIn"/>
+<parameter id="TiledImage"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="add_border_size">
+<interface>
+<io>
+<par name="ImageIn" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="TiledImage" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Width" base_type="ctrl" dimension="0"/>
+<par name="Height" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure adds a border to the given image such that the image</c>
+<c>* is placed in the center of the new image and the new image has the</c>
+<c>* given image size. Finally, it overpaints the border with the gray value 255.</c>
+<c>* </c>
+<l>get_image_size (ImageIn, WidthI, HeightI)</l>
+<l>BorderRow := (Height - HeightI) / 2</l>
+<l>BorderCol := (Width - WidthI) / 2</l>
+<l>tile_images_offset (ImageIn, TiledImage, BorderRow, BorderCol, -1, -1, -1, -1, Width, Height)</l>
+<l>get_domain (TiledImage, Domain)</l>
+<l>gen_rectangle1 (Rectangle, 0, 0, Height - 1, Width - 1)</l>
+<l>difference (Rectangle, Domain, RegionDifference)</l>
+<l>overpaint_region (TiledImage, RegionDifference, 255, 'fill')</l>
+<l>get_image_size (TiledImage, WidthFull, HeightFull)</l>
+<l>return ()</l>
+</body>
+<docu id="add_border_size">
+<short lang="en_US">Place image in the center of a larger new image.</short>
+<parameters>
+<parameter id="Height"/>
+<parameter id="ImageIn"/>
+<parameter id="TiledImage"/>
+<parameter id="Width"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="create_warp_image">
+<interface>
+<oo>
+<par name="WarpImage" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Width" base_type="ctrl" dimension="0"/>
+<par name="Height" base_type="ctrl" dimension="0"/>
+<par name="MaxDeformation" base_type="ctrl" dimension="0"/>
+<par name="MaxDeformationFrequency" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* This procedure creates a warp image that can be used as one component of</c>
+<c>* a vector field, which then can be used to distort an image.</c>
+<c>* </c>
+<l>Ratio := max([1.0 * Width / Height,0.3])</l>
+<l>gen_image_const (Image, 'real', round(2.0 * MaxDeformationFrequency * Ratio), round(2.0 * MaxDeformationFrequency / Ratio))</l>
+<l>add_noise_white (Image, ImageNoise, MaxDeformation)</l>
+<l>zoom_image_size (ImageNoise, ImageZoom, Width, Height, 'weighted')</l>
+<l>gen_rectangle1 (Mask, 1, 1, Height - 2, Width - 2)</l>
+<l>difference (ImageZoom, Mask, Border)</l>
+<l>overpaint_region (ImageZoom, Border, 0.0, 'fill')</l>
+<l>derivate_gauss (ImageZoom, WarpImage, 1, 'none')</l>
+<l>return ()</l>
+</body>
+<docu id="create_warp_image">
+<short lang="en_US">Create a random warp image.</short>
+<parameters>
+<parameter id="Height"/>
+<parameter id="MaxDeformation"/>
+<parameter id="MaxDeformationFrequency"/>
+<parameter id="WarpImage"/>
+<parameter id="Width"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="eliminate_duplicate_samples">
+<interface>
+<io>
+<par name="AllCharacters" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="AllCharactersWithoutDup" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="AllClasses" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="AllClassesWithoutDup" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>intensity (AllCharacters, AllCharacters, Mean, Deviation)</l>
+<l>IntensitySortId := sort_index(Mean)</l>
+<l>select_obj (AllCharacters, IntensitySortedCharacters, IntensitySortId + 1)</l>
+<l>IntensitySortedMean := subset(Mean,IntensitySortId)</l>
+<l>IntensitySortedClasses := subset(AllClasses,IntensitySortId)</l>
+<l>count_obj (IntensitySortedCharacters, Number)</l>
+<l>IntensitySortedMask := gen_tuple_const(Number,1)</l>
+<l>for I := 1 to Number - 1 by 1</l>
+<l>    select_obj (IntensitySortedCharacters, ObjI, I)</l>
+<l>    for J := I + 1 to Number by 1</l>
+<l>        if (IntensitySortedMean[I - 1] != IntensitySortedMean[J - 1])</l>
+<l>            break</l>
+<l>        endif</l>
+<l>        select_obj (IntensitySortedCharacters, ObjJ, J)</l>
+<c>        * Compare domains</c>
+<l>        symm_difference (ObjI, ObjJ, RegionDifference)</l>
+<l>        area_center (RegionDifference, AreaDiff, RowDiff, ColumnDiff)</l>
+<l>        if (AreaDiff == 0)</l>
+<c>            * Compare gray values</c>
+<l>            try</l>
+<l>                dyn_threshold (ObjI, ObjJ, RegionDynThresh, 0, 'not_equal')</l>
+<l>                area_center (RegionDynThresh, AreaDynThresh, RowDynThresh, ColumnDynThresh)</l>
+<l>                if (AreaDynThresh == 0)</l>
+<l>                    IntensitySortedMask[J - 1] := 0</l>
+<l>                endif</l>
+<l>            catch (Exception)</l>
+<l>            endtry</l>
+<l>        endif</l>
+<l>    endfor</l>
+<l>endfor</l>
+<l>select_mask_obj (IntensitySortedCharacters, AllCharactersWithoutDup, IntensitySortedMask)</l>
+<l>AllClassesWithoutDup := select_mask(IntensitySortedClasses,IntensitySortedMask)</l>
+<l>return ()</l>
+</body>
+<docu id="eliminate_duplicate_samples">
+<parameters>
+<parameter id="AllCharacters"/>
+<parameter id="AllCharactersWithoutDup"/>
+<parameter id="AllClasses"/>
+<parameter id="AllClassesWithoutDup"/>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>

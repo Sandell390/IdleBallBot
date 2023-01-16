@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="13.0.4">
+<procedure name="main">
+<interface/>
+<body>
+<c></c>
+<l>global def tuple mode</l>
+<c></c>
+<l>global def tuple moneyString</l>
+<c></c>
+<l>global def tuple levelString</l>
+<c></c>
+<l>global def tuple vector(2) balls</l>
+<c></c>
+<c></c>
+<l>moneyString := ''</l>
+<l>levelString := ''</l>
+<c></c>
+<l>balls.clear()</l>
+<c></c>
+<c></c>
+<l>read_image (Image, 'screen.png')</l>
+<l>if (mode == 1) // Money</l>
+<l>    image_to_channels (Image, Images)</l>
+<l>    select_obj (Images, ObjectSelected, 3)</l>
+<c>    **clip_region (Image, RegionClipped, 0, 0, 256, 256)</c>
+<l>    gen_rectangle1 (Rectangle, 100, 0, 230, 300)</l>
+<c>    </c>
+<l>    reduce_domain (ObjectSelected, Rectangle, moneyImage)</l>
+<l>    TextFinder (moneyImage, 7, 30, 50, moneyString)</l>
+<c></c>
+<c></c>
+<l>endif</l>
+<c></c>
+<l>if (mode == 2) // Level</l>
+<l>    image_to_channels (Image, Images)</l>
+<l>    select_obj (Images, ObjectSelected, 3)</l>
+<c>    **clip_region (Image, RegionClipped, 0, 0, 256, 256)</c>
+<l>    gen_rectangle1 (Rectangle, 120, 355, 200, 730)</l>
+<c>    </c>
+<l>    reduce_domain (ObjectSelected, Rectangle, ImageReduced)</l>
+<l>    TextFinder (ImageReduced, -1, 20, 30, levelString)</l>
+<l>endif</l>
+<c></c>
+<l>if (mode == 3) // Diamond</l>
+<c>    </c>
+<c>    </c>
+<c>    </c>
+<c>    </c>
+<l>endif</l>
+<c></c>
+<l>if (mode == 4) // Balls</l>
+<l>    gen_rectangle1 (Rectangle, 1695, 10, 2295, 1065)</l>
+<l>    reduce_domain (Image, Rectangle, ImageReduced)</l>
+<l>    image_to_channels (ImageReduced, Images1)</l>
+<c>    </c>
+<l>    select_obj (Images1, imageRed, 1)</l>
+<l>    select_obj (Images1, imageGreen, 2)</l>
+<l>    select_obj (Images1, imageBlue, 3)</l>
+<c>    </c>
+<l>    threshold (imageBlue, Region, 150, 255)</l>
+<l>    closing_rectangle1 (Region, RegionClosing, 1000, 10)</l>
+<l>    connection (RegionClosing, ConnectedRegions)</l>
+<c>    </c>
+<l>    count_obj (ConnectedRegions, Number)</l>
+<l>    area_center (ConnectedRegions, Area, Row, Column)</l>
+<c>    </c>
+<c></c>
+<l>    string := []</l>
+<c>    </c>
+<l>    for Index1 := 1 to Number by 1</l>
+<c>        </c>
+<l>        if (Area[Index1 - 1] &gt; 230000)</l>
+<c>            ** Check if the box is unlock new ball</c>
+<l>            select_obj (ConnectedRegions, Box, Index1)</l>
+<l>            reduce_domain (imageBlue, Box, ImageReduced1)</l>
+<l>            TextFinder (ImageReduced1, 7, 20, 37, output)</l>
+<c>            </c>
+<l>            if(output &gt; 'Unl0ck')</l>
+<l>                string := ['unlock',string]</l>
+<l>                balls.insert(balls.length(),{output})</l>
+<c>                </c>
+<l>            else</l>
+<l>                string := ['ball',string]</l>
+<c>                </c>
+<l>                reduce_domain (imageGreen, Box, ImageReduced1)</l>
+<c>                </c>
+<l>                gen_rectangle1 (AmountPart, Row[Index1- 1] + 20, Column[Index1-1] - 180, Row[Index1-1]  + 110, Column[Index1-1])</l>
+<l>                reduce_domain (ImageReduced1, AmountPart, AmountImage)</l>
+<l>                TextFinder (AmountImage, 6, 20, 37, AmountString)</l>
+<c>                </c>
+<l>                gen_rectangle1 (AmountPart, Row[Index1- 1] - 60, Column[Index1-1] - 180, Row[Index1-1]  + 60, Column[Index1-1])</l>
+<l>                reduce_domain (ImageReduced1, AmountPart, AmountImage)</l>
+<l>                TextFinder (AmountImage, -1, 25, 37, AmountString2)</l>
+<c>                </c>
+<l>                AmountString := [AmountString2,AmountString]</l>
+<c>               </c>
+<l>                gen_rectangle1 (SpeedPart, Row[Index1- 1] - 60, Column[Index1-1] + 60, Row[Index1-1]  + 110, Column[Index1-1] + 250)</l>
+<l>                reduce_domain (ImageReduced1, SpeedPart, SpeedImage)</l>
+<l>                TextFinder (SpeedImage,7, 20, 30, SpeedString)</l>
+<c>                </c>
+<l>                gen_rectangle1 (PowerPart, Row[Index1- 1] - 60, Column[Index1-1] + 300, Row[Index1-1]  + 110, Column[Index1-1] + 500)</l>
+<l>                reduce_domain (ImageReduced1, PowerPart, PowerImage)</l>
+<l>                TextFinder (PowerImage,7, 20, 40, PowerString)</l>
+<c>                </c>
+<l>                gen_rectangle1 (BallNamePart, Row[Index1- 1] - 120, Column[Index1-1] - 200, Row[Index1-1]  - 70, Column[Index1-1] + 250)</l>
+<l>                reduce_domain (ImageReduced1, BallNamePart, BallNameImage)</l>
+<l>                TextFinder (BallNameImage, 7, 20, 37, BallNameString)</l>
+<c>                </c>
+<l>                balls.insert(balls.length(),{AmountString,SpeedString,PowerString,BallNameString})</l>
+<c>                </c>
+<l>            endif</l>
+<l>        endif</l>
+<l>    endfor </l>
+<l>endif</l>
+<c>    </c>
+<l>if (mode == 5) // Perks</l>
+<c>    </c>
+<c>    </c>
+<l>endif</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="TextFinder">
+<interface>
+<io>
+<par name="Region" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="strok_width" base_type="ctrl" dimension="0"/>
+<par name="width" base_type="ctrl" dimension="0"/>
+<par name="height" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="output" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>output := []</l>
+<l>string := ''</l>
+<c></c>
+<l>invert_image (Region, ImageInvert)</l>
+<l>read_ocr_class_mlp ('gen_font/ocr.omc', OCRHandle)</l>
+<c></c>
+<l>if (strok_width == -1)</l>
+<l>    create_text_model_reader ('auto', OCRHandle, TextModel)</l>
+<l>else</l>
+<l>    create_text_model_reader ('manual', OCRHandle, TextModel)</l>
+<c>* </c>
+<l>    set_text_model_param (TextModel, 'char_width', width)</l>
+<l>    set_text_model_param (TextModel, 'char_height', height)</l>
+<l>    set_text_model_param (TextModel, 'stroke_width', strok_width)</l>
+<l>    set_text_model_param (TextModel, 'polarity', 'dark_on_light')</l>
+<l>endif</l>
+<c></c>
+<c></c>
+<c></c>
+<l>find_text (ImageInvert, TextModel, TextResult)</l>
+<c>        </c>
+<l>get_text_result (TextResult, 'num_lines', NumLines)</l>
+<c></c>
+<l>for LineIndex := 0 to NumLines - 1 by 1</l>
+<l>    string := ''</l>
+<l>    get_text_object (Line, TextResult, ['line', LineIndex])</l>
+<l>    do_ocr_multi_class_mlp (Line, ImageInvert, OCRHandle, Class, Confidence)</l>
+<c>    * </c>
+<c>    * Display results </c>
+<l>    count_obj (Line, NumberOfCharacters)</l>
+<l>    smallest_rectangle1 (Line, Row1, Column1, Row2, Column2)</l>
+<l>    dev_set_colored (6)</l>
+<l>    dev_display (Line)</l>
+<l>    dev_set_color ('dark green')</l>
+<l>    for CharacterIndex := 1 to NumberOfCharacters by 1</l>
+<l>        select_obj (Line, Character, CharacterIndex)</l>
+<l>        if(Class[CharacterIndex - 1] == 'o' or Class[CharacterIndex - 1] == 'O')</l>
+<l>            Class[CharacterIndex - 1] := '0'</l>
+<l>        endif</l>
+<c>        </c>
+<l>        if(Class[CharacterIndex - 1] == '5' and CharacterIndex == 1)</l>
+<l>            Class[CharacterIndex - 1] := '$'</l>
+<l>        endif</l>
+<c>        </c>
+<l>        if(Class[CharacterIndex - 1] == 'x' or Class[CharacterIndex - 1] == 'X')</l>
+<l>            continue</l>
+<l>        endif</l>
+<c>        </c>
+<l>        string := string + Class[CharacterIndex - 1]</l>
+<l>     endfor</l>
+<l>     output := [output,string]</l>
+<l>endfor</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="TextFinder">
+<parameters>
+<parameter id="Region"/>
+<parameter id="height"/>
+<parameter id="output"/>
+<parameter id="strok_width"/>
+<parameter id="width"/>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>
