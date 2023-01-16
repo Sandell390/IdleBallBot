@@ -33,7 +33,8 @@ namespace IdleBallBot
                     _ = _.Replace("v", "");
                     _ = _.Replace(".", "");
                     _ = _.Replace(",", "");
-                    Level = int.Parse(_);
+                    int.TryParse(_, out int res);
+                    Level = res;
                 }
                 else if (float.TryParse(strings[i], out float res))
                 {

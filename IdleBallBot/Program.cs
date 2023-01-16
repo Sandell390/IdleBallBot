@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using HalconDotNet;
 
 namespace IdleBallBot
@@ -25,11 +27,17 @@ namespace IdleBallBot
             Console.WriteLine("Hello World!");
             hDevProgram.LoadProgram("vision.hdev");
 
-            TakeScreenshot();
-            RunHdev(1);
-            RunHdev(2);
-            RunHdev(4);
-            ViewData();
+
+            while (true)
+            {
+                TakeScreenshot();
+                RunHdev(1);
+                RunHdev(2);
+                RunHdev(4);
+                ViewData();
+
+                Thread.Sleep(1000);
+            }
             Console.ReadLine();
         }
 
@@ -64,30 +72,43 @@ namespace IdleBallBot
 
                     for (int i = 0; i < vector.Length; i++)
                     {
-
-                        if (vector[i][0].T.S.ToLower().Contains("l0ck"))
+                        for (int k = 0; k < vector[i].Length; k++)
                         {
-                            balls.Add(new Ball() { Name = "Unlock new ball"});
-                            continue;
+                            if (vector[i][0].T.S.ToLower().Contains("l0ck"))
+                            {
+                                //balls.Add(new Ball() { Name = "Unlock new ball"});
+                                continue;
+                            }
+
+                            string name = vector[i][vector[0].Length - 1].T.S;
+                            if (string.IsNullOrEmpty(name))
+                                continue;
+
+                            HTuple tupleAmount = vector[i][0].T;
+                            HTuple tupleSpeed = vector[i][1].T;
+                            HTuple tuplePower = vector[i][2].T;
+
+                            Upgrades BallAmount = new Upgrades(tupleAmount.ToSArr());
+                            Upgrades Speed = new Upgrades(tupleSpeed.ToSArr());
+                            Upgrades Power = new Upgrades(tuplePower.ToSArr());
+
+
+                            Ball ball = new Ball() { Balls = BallAmount, Name = name, Power = Power, Speed = Speed };
+
+
+                            if (!balls.Exists(x => x.Name.ToLower() == ball.Name.ToLower()))
+                            {
+                                balls.Add(ball);
+                            }
+                            else
+                            {
+                                balls[balls.FindIndex(x => x.Name.ToLower() == ball.Name.ToLower())].Power = Power;
+                                balls[balls.FindIndex(x => x.Name.ToLower() == ball.Name.ToLower())].Balls = BallAmount;
+                                balls[balls.FindIndex(x => x.Name.ToLower() == ball.Name.ToLower())].Speed = Speed;
+                            }
+                            break;
                         }
-
-                        string name = vector[i][vector[0].Length - 1].ToString();
-
-                        HTuple tupleAmount = vector[i][0].T;
-                        HTuple tupleSpeed = vector[i][1].T;
-                        HTuple tuplePower = vector[i][2].T;
-
-                        Upgrades BallAmount = new Upgrades(tupleAmount.ToSArr());
-                        Upgrades Speed = new Upgrades(tupleSpeed.ToSArr());
-                        Upgrades Power = new Upgrades(tuplePower.ToSArr());
                         
-
-                        Ball ball = new Ball() { Balls = BallAmount, Name = name, Power = Power, Speed = Speed };
-
-                        if (!balls.Exists(x => x.Name == ball.Name))
-                        {
-                            balls.Add(ball);
-                        }
                     }
                     break;
             }
@@ -104,8 +125,8 @@ namespace IdleBallBot
             Process Process;
 
             ProcessInfo = new ProcessStartInfo("cmd.exe", "/c " + Command);
-            ProcessInfo.CreateNoWindow = false;
-            ProcessInfo.UseShellExecute = true;
+            ProcessInfo.CreateNoWindow = true;
+            ProcessInfo.UseShellExecute = false;
 
             Process = Process.Start(ProcessInfo);
             Process.WaitForExit();
@@ -127,12 +148,30 @@ namespace IdleBallBot
                 Console.WriteLine("Name: " + ball.Name);
                 if (!ball.Name.Contains("Unlock"))
                 {
-                    Console.WriteLine("Amount: " + ball.Balls.LevelPower + " | Cost: " + ball.Balls.MoneyFormat.ToString());
-                    Console.WriteLine("Speed: " + ball.Speed.Level + " | Levelpower: " + ball.Speed.LevelPower + " | Cost:" + ball.Speed.MoneyFormat.ToString());
-                    Console.WriteLine("Power: " + ball.Power.Level + " | Levelpower: " + ball.Power.LevelPower + " | Cost:" + ball.Power.MoneyFormat.ToString());
+                    Console.Write("Amount: " + ball.Balls.LevelPower + " | Cost: ");
+                    Console.ForegroundColor = MoneyFormat.Compare(TotalMoney , ball.Balls.MoneyFormat) ? ConsoleColor.Green : ConsoleColor.Red;
+                    Console.Write(ball.Balls.MoneyFormat.ToString());
+                    Console.WriteLine();
+
+                    Console.ForegroundColor = ConsoleColor.White;
+
+                    Console.Write("Speed: " + ball.Speed.Level + " | Levelpower: " + ball.Speed.LevelPower + " | Cost: ");
+                    Console.ForegroundColor = MoneyFormat.Compare(TotalMoney, ball.Speed.MoneyFormat) ? ConsoleColor.Green : ConsoleColor.Red;
+                    Console.Write(ball.Speed.MoneyFormat.ToString());
+                    Console.WriteLine();
+
+                    Console.ForegroundColor = ConsoleColor.White;
+
+                    Console.Write("Power: " + ball.Speed.Level + " | Levelpower: " + ball.Power.LevelPower + " | Cost: ");
+                    Console.ForegroundColor = MoneyFormat.Compare(TotalMoney, ball.Power.MoneyFormat) ? ConsoleColor.Green : ConsoleColor.Red;
+                    Console.Write(ball.Power.MoneyFormat.ToString());
+                    Console.WriteLine();
+
+                    Console.ForegroundColor = ConsoleColor.White;
                 }
                 Console.WriteLine();
-              
+
+                
             }
 
             Console.WriteLine("--------------------------------------------------------------------------");

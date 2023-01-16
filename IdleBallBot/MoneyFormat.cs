@@ -85,5 +85,20 @@ namespace IdleBallBot
 
             return _string;
         }
+
+        public static bool Compare(MoneyFormat money1, MoneyFormat money2)
+        {
+            if (money1.Type > money2.Type)
+            {
+                return true;
+            }
+
+            if (money1.Type == money2.Type && money1.Digits > money2.Digits)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }
