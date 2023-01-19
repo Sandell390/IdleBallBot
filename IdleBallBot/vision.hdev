@@ -12,24 +12,37 @@
 <c></c>
 <l>global def tuple vector(2) balls</l>
 <c></c>
+<l>global def tuple vector(1) ballsUpgradeCoords</l>
+<c></c>
+<l>global def tuple foundDiamond</l>
+<c></c>
+<l>global def tuple isBallMenuOpen</l>
 <c></c>
 <l>moneyString := ''</l>
 <l>levelString := ''</l>
+<l>foundDiamond := ['']</l>
+<l>isBallMenuOpen := false</l>
+<c></c>
 <c></c>
 <l>balls.clear()</l>
+<l>ballsUpgradeCoords.clear()</l>
 <c></c>
-<c></c>
+<l>*mode := 5</l>
 <l>read_image (Image, 'screen.png')</l>
 <l>if (mode == 1) // Money</l>
 <l>    image_to_channels (Image, Images)</l>
 <l>    select_obj (Images, ObjectSelected, 3)</l>
 <c>    **clip_region (Image, RegionClipped, 0, 0, 256, 256)</c>
-<l>    gen_rectangle1 (Rectangle, 100, 0, 230, 300)</l>
+<l>    gen_rectangle1 (Rectangle, 100, 0, 230, 345)</l>
 <c>    </c>
 <l>    reduce_domain (ObjectSelected, Rectangle, moneyImage)</l>
-<l>    TextFinder (moneyImage, 7, 30, 50, moneyString)</l>
+<l>    TextFinder (moneyImage, 7, 30, 30, moneyString1)</l>
 <c></c>
-<c></c>
+<l>    moneyString := ''</l>
+<l>    if (moneyString1 != [])</l>
+<l>        moneyString := moneyString1</l>
+<l>    endif</l>
+<c>    </c>
 <l>endif</l>
 <c></c>
 <l>if (mode == 2) // Level</l>
@@ -44,7 +57,31 @@
 <c></c>
 <l>if (mode == 3) // Diamond</l>
 <c>    </c>
+<l>    image_to_channels (Image, Images2)</l>
+<l>    select_obj (Images2, ObjectSelected1, 3)</l>
 <c>    </c>
+<l>    gen_rectangle1 (Rectangle1, 350, 25, 1500, 1070)</l>
+<l>    reduce_domain (ObjectSelected1, Rectangle1, ImageReduced2)</l>
+<c>    **clear_ncc_model (ModelID)</c>
+<l>    read_ncc_model ('DiamondModel', ModelID)</l>
+<l>    find_ncc_model (ImageReduced2, ModelID, 0, 6.29, 0.8, 1, 0.9, 'true', 3, Row1, Column1, Angle, Score)</l>
+<c>    </c>
+<c>    **read_shape_model ('DiamondModel', ModelID)</c>
+<c>    **find_shape_model (ImageReduced2,ModelID , 0, 0, 0.8, 1, 0.5, 'none', 4, 0.9, Row1, Column1, Angle, Score)</c>
+<c>    </c>
+<l>    foundDiamond := [Row1,Column1]</l>
+<c>    </c>
+<c>    **gen_rectangle1 (Rectangle2, Row1 - 40, Column1 - 40, Row1 + 40, Column1 + 40)</c>
+<c>    </c>
+<c>    **draw_rectangle1 (200000, Row1, Column1, Row2, Column2)</c>
+<c>    **gen_rectangle1 (Rectangle2, Row1, Column1, Row2, Column2)</c>
+<c>    **reduce_domain (ObjectSelected1, Rectangle2, ImageReduced3)</c>
+<c>    **dev_clear_window ()</c>
+<c>    **dev_display (ImageReduced3)</c>
+<c>    **create_ncc_model (ImageReduced3, 'auto', -3.14, 6.29, 0.0175, 'use_polarity', ModelID)</c>
+<c>    **write_ncc_model (ModelID, 'DiamondModel')</c>
+<c>    **create_shape_model (ImageReduced3, 'auto', -0.39, 0.79, 'auto', 'auto', 'use_polarity', 'auto', 'auto', ModelID)</c>
+<c>    **write_shape_model (ModelID, 'DiamondModel')</c>
 <c>    </c>
 <c>    </c>
 <l>endif</l>
@@ -60,23 +97,27 @@
 <c>    </c>
 <l>    threshold (imageBlue, Region, 150, 255)</l>
 <l>    closing_rectangle1 (Region, RegionClosing, 1000, 10)</l>
+<c>    </c>
+<c>    </c>
+<c>    **fill_up (Region, RegionFillUp)</c>
 <l>    connection (RegionClosing, ConnectedRegions)</l>
+<c>    **draw_rectangle1 (200000, Row1, Column1, Row2, Column2)</c>
+<c>    **gen_rectangle1 (Rectangle1, Row1, Column1, Row2, Column2)</c>
+<c>    **draw_region (Region1, 200000)</c>
+<c>    **area_center (ConnectedRegions, Area1, Row3, Column3)</c>
 <c>    </c>
-<l>    count_obj (ConnectedRegions, Number)</l>
-<l>    area_center (ConnectedRegions, Area, Row, Column)</l>
-<c>    </c>
-<c></c>
 <l>    string := []</l>
 <c>    </c>
-<l>    for Index1 := 1 to Number by 1</l>
-<c>        </c>
-<l>        if (Area[Index1 - 1] &gt; 230000)</l>
+<l>    select_shape (ConnectedRegions, SelectedRegions, 'area', 'and', 230000 - 60000, 230000 + 40000)</l>
+<l>    area_center (SelectedRegions, Area, Row, Column)</l>
+<l>    count_obj (SelectedRegions, Number1)</l>
+<l>    for Index1 := 1 to Number1 by 1</l>
 <c>            ** Check if the box is unlock new ball</c>
-<l>            select_obj (ConnectedRegions, Box, Index1)</l>
+<l>            select_obj (SelectedRegions, Box, Index1)</l>
 <l>            reduce_domain (imageBlue, Box, ImageReduced1)</l>
 <l>            TextFinder (ImageReduced1, 7, 20, 37, output)</l>
 <c>            </c>
-<l>            if(output &gt; 'Unl0ck')</l>
+<l>            if(output[0] == 'Unl0ckNeVVBall')</l>
 <l>                string := ['unlock',string]</l>
 <l>                balls.insert(balls.length(),{output})</l>
 <c>                </c>
@@ -85,7 +126,7 @@
 <c>                </c>
 <l>                reduce_domain (imageGreen, Box, ImageReduced1)</l>
 <c>                </c>
-<l>                gen_rectangle1 (AmountPart, Row[Index1- 1] + 20, Column[Index1-1] - 180, Row[Index1-1]  + 110, Column[Index1-1])</l>
+<l>                gen_rectangle1 (AmountPart, Row[Index1- 1] + 20, Column[Index1-1] - 190, Row[Index1-1]  + 110, Column[Index1-1] + 40)</l>
 <l>                reduce_domain (ImageReduced1, AmountPart, AmountImage)</l>
 <l>                TextFinder (AmountImage, 6, 20, 37, AmountString)</l>
 <c>                </c>
@@ -95,27 +136,53 @@
 <c>                </c>
 <l>                AmountString := [AmountString2,AmountString]</l>
 <c>               </c>
-<l>                gen_rectangle1 (SpeedPart, Row[Index1- 1] - 60, Column[Index1-1] + 60, Row[Index1-1]  + 110, Column[Index1-1] + 250)</l>
+<l>                gen_rectangle1 (SpeedPart, Row[Index1- 1] - 60, Column[Index1-1] + 50, Row[Index1-1]  + 110, Column[Index1-1] + 270)</l>
 <l>                reduce_domain (ImageReduced1, SpeedPart, SpeedImage)</l>
 <l>                TextFinder (SpeedImage,7, 20, 30, SpeedString)</l>
 <c>                </c>
-<l>                gen_rectangle1 (PowerPart, Row[Index1- 1] - 60, Column[Index1-1] + 300, Row[Index1-1]  + 110, Column[Index1-1] + 500)</l>
+<l>                gen_rectangle1 (PowerPart, Row[Index1- 1] - 60, Column[Index1-1] + 290, Row[Index1-1]  + 110, Column[Index1-1] + 500)</l>
 <l>                reduce_domain (ImageReduced1, PowerPart, PowerImage)</l>
 <l>                TextFinder (PowerImage,7, 20, 40, PowerString)</l>
 <c>                </c>
 <l>                gen_rectangle1 (BallNamePart, Row[Index1- 1] - 120, Column[Index1-1] - 200, Row[Index1-1]  - 70, Column[Index1-1] + 250)</l>
 <l>                reduce_domain (ImageReduced1, BallNamePart, BallNameImage)</l>
-<l>                TextFinder (BallNameImage, 7, 20, 37, BallNameString)</l>
+<l>                TextFinder (BallNameImage, 7, 20, 37, BallNameString1)</l>
+<c>                </c>
+<l>                BallNameString := ['']</l>
+<l>                if (BallNameString1 != [])</l>
+<l>                    BallNameString := BallNameString1</l>
+<l>                endif</l>
+<c>                </c>
+<l>                area_center (AmountImage, AmountArea, AmountRow, AmountColumn)</l>
+<c>                </c>
+<c>                </c>
+<c>                </c>
+<c>                </c>
+<l>                area_center (SpeedImage, SpeedArea, SpeedRow, SpeedColumn)</l>
+<l>                area_center (PowerImage, PowerArea, PowerRow, PowerColumn)</l>
+<c>                </c>
+<l>                CoordsTuple := [AmountRow,AmountColumn, SpeedRow, SpeedColumn, PowerRow, PowerColumn]</l>
 <c>                </c>
 <l>                balls.insert(balls.length(),{AmountString,SpeedString,PowerString,BallNameString})</l>
+<l>                ballsUpgradeCoords.insert(ballsUpgradeCoords.length(),CoordsTuple)</l>
+<c>                </c>
 <c>                </c>
 <l>            endif</l>
-<l>        endif</l>
 <l>    endfor </l>
 <l>endif</l>
 <c>    </c>
-<l>if (mode == 5) // Perks</l>
+<l>if (mode == 5) // Balls Menu</l>
+<l>    image_to_channels (Image, Images2)</l>
+<l>    select_obj (Images2, ObjectSelected1, 3)</l>
 <c>    </c>
+<l>    gen_rectangle1 (Rectangle1, 1540, 5, 1625, 270)</l>
+<l>    reduce_domain (ObjectSelected1, Rectangle1, ImageReduced3)</l>
+<c>    </c>
+<l>    TextFinder (ImageReduced3, 11, 40, 37, BallMenuString)</l>
+<c>    </c>
+<l>    if (BallMenuString == 'BALLS')</l>
+<l>        isBallMenuOpen := true</l>
+<l>    endif</l>
 <c>    </c>
 <l>endif</l>
 </body>

@@ -12,8 +12,13 @@ namespace IdleBallBot
         public float LevelPower { get; set; }
         public MoneyFormat MoneyFormat { get; set; }
 
-        public Upgrades(string[] strings)
+        public double X { get; set; }
+        public double Y { get; set; }
+
+        public Upgrades(string[] strings, double x, double y)
         {
+            X = x;
+            Y = y;
             Level = 0;
             LevelPower = 0;
             MoneyFormat = new MoneyFormat("$0");

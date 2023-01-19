@@ -16,5 +16,7 @@ namespace IdleBallBot
 
         public Upgrades Power { get; set; }
 
+        public int UpdateTimeout { get; set; }
+
     }
 }

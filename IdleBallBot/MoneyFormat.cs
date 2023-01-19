@@ -14,12 +14,12 @@ namespace IdleBallBot
 
         public enum MoneyType
         {
-            Undefined,
             None,
             K,
             M,
             B,
-            T
+            T,
+            Undefined,
         }
 
 
@@ -29,6 +29,12 @@ namespace IdleBallBot
             MoneyString = MoneyString.Replace(".",",");
 
             string moneyType = "Error";
+            if (MoneyString.Count() == 0)
+            {
+                Digits= 0;
+                Type = MoneyType.Undefined;
+                return;
+            }
             if (!int.TryParse(MoneyString[MoneyString.Length - 1].ToString(), out int res))
             {
                 moneyType = MoneyString[MoneyString.Length - 1].ToString();
@@ -88,6 +94,11 @@ namespace IdleBallBot
 
         public static bool Compare(MoneyFormat money1, MoneyFormat money2)
         {
+            if (money1.Type == MoneyType.Undefined || money2.Type == MoneyType.Undefined)
+            {
+                return false;
+            }
+
             if (money1.Type > money2.Type)
             {
                 return true;
