@@ -2,9 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using HalconDotNet;
+using Newtonsoft.Json;
 
 namespace IdleBallBot
 {
@@ -42,18 +45,27 @@ namespace IdleBallBot
 
         static long AverageClearTime = 0;
 
+
+        static List<PrestigeStat> PrestigeStats = new List<PrestigeStat>();
+
+        static Random random = new Random();
+
         static void Main(string[] args)
         {
-           //UpgradeCount = 1;
+            //UpgradeCount = 1;
 
             Console.Title = "Ball Bot";
             Console.WriteLine("Hello World!");
             hDevProgram.LoadProgram("vision.hdev");
-
+            //TakeScreenshot();
+            //RunHdev(6);
             WorldStopwatch.Start();
             TotalStopwatch.Start();
             while (true)
             {
+                
+                int prestigeReset = 0;
+
                 TakeScreenshot();
                 RunHdev(5);
                 RunHdev(1);
@@ -61,7 +73,7 @@ namespace IdleBallBot
                 RunHdev(3);
                 RunHdev(4);
                 ViewData();
-                if (level > 120)
+                if (level > 40)
                 {
                     Prestige();
                     PrestigeCount++;
@@ -73,10 +85,28 @@ namespace IdleBallBot
                 }
                 else
                 {
+
                     UpgradeBall();
                 }
-                
-                Thread.Sleep(1000);
+               
+
+
+                //prestigeStat.MinTime = prestigeStat.Times.Min();
+                //prestigeStat.MaxTime = prestigeStat.Times.Max();
+                //foreach (long time in prestigeStat.Times)
+                //{
+                //    prestigeStat.TotalTime += time;
+                //}
+                //prestigeStat.AverageTime = prestigeStat.TotalTime / prestigeStat.Times.Count;
+
+                //PrestigeStats.Add(prestigeStat);
+
+                //var jsonString = JsonConvert.SerializeObject(PrestigeStats);
+
+                //File.WriteAllText("Stats.json", jsonString);
+
+                Thread.Sleep(1500);
+
             }
             Console.ReadLine();
         }
@@ -121,7 +151,6 @@ namespace IdleBallBot
                     if (diamondTuple.Length > 0)
                     {
                         ExecuteCommand($"adb -s {SerialNumber} shell input tap {Convert.ToInt32(diamondTuple[1].D)} {Convert.ToInt32(diamondTuple[0].D)}");
-                        Thread.Sleep(1000);
                         FoundedDiamonds++;
                     }
 
@@ -136,6 +165,11 @@ namespace IdleBallBot
                     {
                         for (int k = 0; k < vector[i].Length; k++)
                         {
+                            if (vector[i][0].T.Length == 0)
+                            {
+                                continue;
+                            }
+
                             if (vector[i][0].T.S.ToLower().Contains("l0ck"))
                             {
                                 currentBalls.Add(new Ball() { Name = "Unlock new ball"});
@@ -203,7 +237,6 @@ namespace IdleBallBot
                     if (BallMenu.D == 0)
                     {
                         ExecuteCommand($"adb -s {SerialNumber} shell input tap 150 2340");
-                        Thread.Sleep(500);
                     }
 
                     break;
@@ -213,6 +246,11 @@ namespace IdleBallBot
         static void TakeScreenshot()
         {
             ExecuteCommand($"adb -s {SerialNumber} exec-out screencap -p > screen.png");
+        }
+
+        static void TakeScreenshot(string path, string name)
+        {
+            ExecuteCommand($"adb -s {SerialNumber} exec-out screencap -p > {path}\\{name}.png");
         }
 
         static void ExecuteCommand(string Command)
@@ -230,6 +268,7 @@ namespace IdleBallBot
 
         static void UpgradeBall()
         {
+            Thread.Sleep(1500);
             foreach (Ball ball in currentBalls)
             {
                 if (ball.Name != "Unlock new ball")
@@ -307,11 +346,11 @@ namespace IdleBallBot
 
         static void BuyNewBall()
         {
-            Thread.Sleep(1000);
+            Thread.Sleep(800);
             ExecuteCommand($"adb -s {SerialNumber} shell input tap 500 2150");
-            Thread.Sleep(1000);
+            Thread.Sleep(800);
             ExecuteCommand($"adb -s {SerialNumber} shell input tap 800 1250");
-            Thread.Sleep(1000);
+            Thread.Sleep(800);
         }
 
         static void Prestige()
@@ -327,6 +366,25 @@ namespace IdleBallBot
             ExecuteCommand($"adb -s {SerialNumber} shell input tap 150 2340");
 
             UpgradeCount= 0;
+            balls.Clear();
+        }
+
+        static void Prestige(string path, string name)
+        {
+            ExecuteCommand($"adb -s {SerialNumber} shell input tap 960 2333");
+            Thread.Sleep(1000);
+            ExecuteCommand($"adb -s {SerialNumber} shell input tap 200 1480");
+
+            TakeScreenshot(path, name);
+
+            Thread.Sleep(1000);
+            ExecuteCommand($"adb -s {SerialNumber} shell input tap 350 1670");
+            Thread.Sleep(1000);
+            ExecuteCommand($"adb -s {SerialNumber} shell input tap 700 1530");
+            Thread.Sleep(1000);
+            ExecuteCommand($"adb -s {SerialNumber} shell input tap 150 2340");
+
+            UpgradeCount = 0;
             balls.Clear();
         }
 
@@ -401,7 +459,50 @@ namespace IdleBallBot
 
 
 
+//for (int i = 0; i < 18; i++)
+//{
+//    PrestigeStat prestigeStat = new PrestigeStat() { Prestige = (i * 10) + 160};
+//    prestigeStat.Times = new List<long>();
+//    Directory.CreateDirectory("Prestige" + prestigeStat.Prestige);
 
+//    do
+//    {
+//        TakeScreenshot();
+//        RunHdev(5);
+//        RunHdev(1);
+//        RunHdev(2);
+//        RunHdev(3);
+//        RunHdev(4);
+//        ViewData();
+//        if (level > prestigeStat.Prestige)
+//        {
+//            Prestige("Prestige" + prestigeStat.Prestige, prestigeStat.Times.Count + "screen");
+//            PrestigeCount++;
+//            ClearTimes.Add(WorldStopwatch.ElapsedMilliseconds);
+//            long TotalClearTime = 0;
+//            ClearTimes.ForEach(t => { TotalClearTime += t; });
+//            AverageClearTime = (TotalClearTime / ClearTimes.Count) / 1000;
+
+//            prestigeStat.Times.Add(WorldStopwatch.ElapsedMilliseconds / 1000);
+
+//            WorldStopwatch.Restart();
+
+//        }
+//        else
+//        {
+//            UpgradeBall();
+//        }
+
+//        Thread.Sleep(1500);
+//        GC.Collect();
+//        GC.WaitForPendingFinalizers();
+
+//    } while (prestigeStat.Times.Count <= 9);
+
+
+
+
+//}
 
 
 

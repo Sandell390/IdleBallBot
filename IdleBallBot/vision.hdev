@@ -18,6 +18,10 @@
 <c></c>
 <l>global def tuple isBallMenuOpen</l>
 <c></c>
+<l>global def tuple PrestigeTicks</l>
+<c></c>
+<c></c>
+<l>PrestigeTicks := ''</l>
 <l>moneyString := ''</l>
 <l>levelString := ''</l>
 <l>foundDiamond := ['']</l>
@@ -27,7 +31,7 @@
 <l>balls.clear()</l>
 <l>ballsUpgradeCoords.clear()</l>
 <c></c>
-<l>*mode := 5</l>
+<l>*mode := 3</l>
 <l>read_image (Image, 'screen.png')</l>
 <l>if (mode == 1) // Money</l>
 <l>    image_to_channels (Image, Images)</l>
@@ -64,12 +68,14 @@
 <l>    reduce_domain (ObjectSelected1, Rectangle1, ImageReduced2)</l>
 <c>    **clear_ncc_model (ModelID)</c>
 <l>    read_ncc_model ('DiamondModel', ModelID)</l>
-<l>    find_ncc_model (ImageReduced2, ModelID, 0, 6.29, 0.8, 1, 0.9, 'true', 3, Row1, Column1, Angle, Score)</l>
+<l>    find_ncc_model (ImageReduced2, ModelID, 0, 0.79, 0.8, 1, 0.5, 'true', 3, Row1, Column1, Angle, Score)</l>
 <c>    </c>
 <c>    **read_shape_model ('DiamondModel', ModelID)</c>
 <c>    **find_shape_model (ImageReduced2,ModelID , 0, 0, 0.8, 1, 0.5, 'none', 4, 0.9, Row1, Column1, Angle, Score)</c>
 <c>    </c>
 <l>    foundDiamond := [Row1,Column1]</l>
+<c>    </c>
+<l>    clear_ncc_model (ModelID)</l>
 <c>    </c>
 <c>    **gen_rectangle1 (Rectangle2, Row1 - 40, Column1 - 40, Row1 + 40, Column1 + 40)</c>
 <c>    </c>
@@ -119,7 +125,7 @@
 <c>            </c>
 <l>            if(output[0] == 'Unl0ckNeVVBall')</l>
 <l>                string := ['unlock',string]</l>
-<l>                balls.insert(balls.length(),{output})</l>
+<l>                balls.insert(balls.length(),{'l0ck'})</l>
 <c>                </c>
 <l>            else</l>
 <l>                string := ['ball',string]</l>
@@ -185,6 +191,45 @@
 <l>    endif</l>
 <c>    </c>
 <l>endif</l>
+<c></c>
+<l>if(mode == 6)</l>
+<l>    image_to_channels (Image, Images3)</l>
+<l>    select_obj (Images3, ObjectSelected2, 3)</l>
+<c>    </c>
+<l>    *draw_rectangle1 (200000, Row11, Column11, Row2, Column2)</l>
+<l>    gen_rectangle1 (Rectangle2, 1415, 611, 1539, 800)</l>
+<l>    reduce_domain (ObjectSelected2, Rectangle2, ImageReduced4)</l>
+<c>    </c>
+<l>    TextFinder (ImageReduced4,4, 18, 35, output)</l>
+<c>    </c>
+<c></c>
+<l>    for Index := 1 to 30 by 1</l>
+<c>        </c>
+<l>        for Index2 := 1 to 70 by 1</l>
+<c>            </c>
+<l>            for Index3 := 1 to 70 by 1</l>
+<c>                </c>
+<l>                TextFinder (ImageReduced4,Index, Index2, Index3, output)</l>
+<c>                </c>
+<l>                if(output != [])</l>
+<c>                    </c>
+<l>                    if(output[0] == 5)</l>
+<l>                        stop()</l>
+<l>                    endif</l>
+<c>                     </c>
+<l>                    stop()</l>
+<l>                endif</l>
+<c>                </c>
+<l>            endfor</l>
+<l>        endfor</l>
+<c>        </c>
+<l>    endfor</l>
+<l>    stop ()</l>
+<l>    PrestigeTicks := output</l>
+<c>    </c>
+<l>endif</l>
+<c></c>
+<l>dev_clear_window ()</l>
 </body>
 <docu id="main">
 <parameters/>
@@ -257,6 +302,10 @@
 <l>     endfor</l>
 <l>     output := [output,string]</l>
 <l>endfor</l>
+<c></c>
+<l>clear_text_model (TextModel)</l>
+<l>clear_text_result (TextResult)</l>
+<l>clear_ocr_class_mlp (OCRHandle)</l>
 <c></c>
 <l>return ()</l>
 </body>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -87,12 +87,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="halcondotnet">
-      <HintPath>..\..\..\Work\github_ctpFalcon\VS projekter\Extern dll\Halcon 13.0.4\halcondotnet.dll</HintPath>
-    </Reference>
-    <Reference Include="hdevenginedotnet">
-      <HintPath>..\..\..\Work\github_ctpFalcon\VS projekter\Extern dll\Halcon 13.0.4\hdevenginedotnet.dll</HintPath>
-    </Reference>
+    <PackageReference Include="HalconDotNet" Version="13.0.4" />
+    <PackageReference Include="HDevEngineDotNet" Version="13.0.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
 
 </Project>

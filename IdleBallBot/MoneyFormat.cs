@@ -19,6 +19,7 @@ namespace IdleBallBot
             M,
             B,
             T,
+            q,
             Undefined,
         }
 
@@ -63,6 +64,9 @@ namespace IdleBallBot
                 case "t":
                     Type = MoneyType.T;
                     break;
+                case "q":
+                    Type = MoneyType.q;
+                    break;
                 default:
                     Type = MoneyType.Undefined;
                     break;
@@ -87,6 +91,8 @@ namespace IdleBallBot
                     return _string + " B";
                 case MoneyType.T:
                     return _string + " T";
+                case MoneyType.q:
+                    return _string + " q";
             }
 
             return _string;
