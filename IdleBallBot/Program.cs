@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,7 +22,7 @@ namespace IdleBallBot
 
         static List<Ball> currentBalls = new List<Ball>();
 
-        static MoneyFormat TotalMoney;
+        static MoneyFormat TotalMoney = new MoneyFormat("0.0");
 
         static int level = 0;
 
@@ -29,7 +30,7 @@ namespace IdleBallBot
 
         static HDevProgram hDevProgram = new HDevProgram();
 
-        static MoneyFormat[] NewBallCost = new MoneyFormat[] { new MoneyFormat("1.0k"), new MoneyFormat("7.50K"), new MoneyFormat("175.00K"), new MoneyFormat("15.00M"), new MoneyFormat("400.00B") };
+        static MoneyFormat[] NewBallCost = new MoneyFormat[] { new MoneyFormat("1.0k"), new MoneyFormat("7.50K"), new MoneyFormat("175.00K"), new MoneyFormat("15.00M"), new MoneyFormat("400.00B"), new MoneyFormat("10.00q") };
 
         static int UpgradeCount = 0;
 
@@ -50,6 +51,12 @@ namespace IdleBallBot
 
         static Random random = new Random();
 
+        static int Mode = 1;
+
+        static bool BallMenuOpen = false;
+
+        static bool Stopped = false;
+
         static void Main(string[] args)
         {
             //UpgradeCount = 1;
@@ -57,58 +64,113 @@ namespace IdleBallBot
             Console.Title = "Ball Bot";
             Console.WriteLine("Hello World!");
             hDevProgram.LoadProgram("vision.hdev");
-            //TakeScreenshot();
-            //RunHdev(6);
+
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    switch (Console.ReadKey().Key)
+                    {
+                        case ConsoleKey.S:
+                            if (Stopped)
+                            {
+                                Stopped = false;
+                            }
+                            else
+                            {
+                                Stopped = true;
+                                Console.Clear();
+                                Console.WriteLine("Stopped!");
+                            }
+                            break;
+                    }
+                }
+
+            });
+
             WorldStopwatch.Start();
             TotalStopwatch.Start();
+
             while (true)
             {
-                
-                int prestigeReset = 0;
-
-                TakeScreenshot();
-                RunHdev(5);
-                RunHdev(1);
-                RunHdev(2);
-                RunHdev(3);
-                RunHdev(4);
-                ViewData();
-                if (level > 40)
+                while (Stopped)
                 {
-                    Prestige();
-                    PrestigeCount++;
-                    ClearTimes.Add(WorldStopwatch.ElapsedMilliseconds);
-                    long TotalClearTime = 0;
-                    ClearTimes.ForEach(t => { TotalClearTime += t; });
-                    AverageClearTime = (TotalClearTime / ClearTimes.Count) / 1000;
-                    WorldStopwatch.Restart();
+                    // Do nothing
                 }
-                else
+
+                switch (Mode)
                 {
-
-                    UpgradeBall();
+                    case 0:
+                        StandardRun();
+                        break;
+                    case 1:
+                        DiamondRun();
+                        break;
                 }
-               
-
-
-                //prestigeStat.MinTime = prestigeStat.Times.Min();
-                //prestigeStat.MaxTime = prestigeStat.Times.Max();
-                //foreach (long time in prestigeStat.Times)
-                //{
-                //    prestigeStat.TotalTime += time;
-                //}
-                //prestigeStat.AverageTime = prestigeStat.TotalTime / prestigeStat.Times.Count;
-
-                //PrestigeStats.Add(prestigeStat);
-
-                //var jsonString = JsonConvert.SerializeObject(PrestigeStats);
-
-                //File.WriteAllText("Stats.json", jsonString);
-
-                Thread.Sleep(1500);
-
             }
             Console.ReadLine();
+        }
+
+        static void DiamondRun() 
+        {
+            TakeScreenshot();
+            RunHdev(5);
+            if (BallMenuOpen)
+            {
+                RunHdev(3);
+            }
+            else
+            {
+                RunHdev(7);
+            }
+            ViewData();
+            Thread.Sleep(100);
+        }
+
+        static void StandardRun()
+        {
+            int prestigeReset = 0;
+
+            TakeScreenshot();
+            RunHdev(5);
+            RunHdev(1);
+            RunHdev(2);
+            RunHdev(3);
+            RunHdev(4);
+            ViewData();
+            if (level > 50)
+            {
+                Prestige();
+                PrestigeCount++;
+                ClearTimes.Add(WorldStopwatch.ElapsedMilliseconds);
+                long TotalClearTime = 0;
+                ClearTimes.ForEach(t => { TotalClearTime += t; });
+                AverageClearTime = (TotalClearTime / ClearTimes.Count) / 1000;
+                WorldStopwatch.Restart();
+            }
+            else
+            {
+
+                UpgradeBall();
+            }
+
+
+
+            //prestigeStat.MinTime = prestigeStat.Times.Min();
+            //prestigeStat.MaxTime = prestigeStat.Times.Max();
+            //foreach (long time in prestigeStat.Times)
+            //{
+            //    prestigeStat.TotalTime += time;
+            //}
+            //prestigeStat.AverageTime = prestigeStat.TotalTime / prestigeStat.Times.Count;
+
+            //PrestigeStats.Add(prestigeStat);
+
+            //var jsonString = JsonConvert.SerializeObject(PrestigeStats);
+
+            //File.WriteAllText("Stats.json", jsonString);
+
+            Thread.Sleep(100);
         }
 
         static void RunHdev(int mode)
@@ -145,6 +207,7 @@ namespace IdleBallBot
                     }
                     level = int.Parse(_);
                     break;
+                case 7:
                 case 3:
                     HTuple diamondTuple = hDevEngine.GetGlobalCtrlVarTuple("foundDiamond");
 
@@ -236,7 +299,14 @@ namespace IdleBallBot
 
                     if (BallMenu.D == 0)
                     {
-                        ExecuteCommand($"adb -s {SerialNumber} shell input tap 150 2340");
+                        if (Mode == 0)
+                            ExecuteCommand($"adb -s {SerialNumber} shell input tap 150 2340");
+
+                        BallMenuOpen = false;
+                    }
+                    else
+                    {
+                        BallMenuOpen = true;
                     }
 
                     break;
@@ -268,11 +338,19 @@ namespace IdleBallBot
 
         static void UpgradeBall()
         {
-            Thread.Sleep(1500);
+            
+
+            List<Upgrades> upgrades = new List<Upgrades>();
+
             foreach (Ball ball in currentBalls)
             {
                 if (ball.Name != "Unlock new ball")
                 {
+                    upgrades.Add(ball.Power);
+                    upgrades.Add(ball.Balls);
+                    upgrades.Add(ball.Speed);
+
+                    /*
                     if (MoneyFormat.Compare(TotalMoney, ball.Speed.MoneyFormat))
                     {
                         //Console.WriteLine("Upgrading");
@@ -296,19 +374,32 @@ namespace IdleBallBot
 
                         return;
                     }
-
-
+                    */
                 }
-
-
-                
-
                 //Console.WriteLine("Not upgrade");
             }
 
-            
+            int currentUpgradeIndex = 0;
 
-            
+            for (int i = 0; i < upgrades.Count; i++)
+            {
+                if (i == currentUpgradeIndex)
+                {
+                    continue;
+                }
+
+                if (MoneyFormat.Compare(upgrades[currentUpgradeIndex].MoneyFormat, upgrades[i].MoneyFormat))
+                {
+                    currentUpgradeIndex = i;
+                    i = 0;
+                }
+            }
+
+            if (upgrades.Count != 0 && MoneyFormat.Compare(TotalMoney, upgrades[currentUpgradeIndex].MoneyFormat))
+            {
+                ExecuteCommand($"adb -s {SerialNumber} shell input tap {upgrades[currentUpgradeIndex].X} {upgrades[currentUpgradeIndex].Y}");
+                return;
+            }
 
             if (currentBalls.Exists(x => x.Name == "Unlock new ball"))
             {
@@ -365,7 +456,7 @@ namespace IdleBallBot
             Thread.Sleep(1000);
             ExecuteCommand($"adb -s {SerialNumber} shell input tap 150 2340");
 
-            UpgradeCount= 0;
+            UpgradeCount = 0;
             balls.Clear();
         }
 
@@ -390,6 +481,8 @@ namespace IdleBallBot
 
         static void ViewData()
         {
+            if (Stopped)
+                return;
             Console.Clear();
 
             Console.WriteLine("Ball Bot");

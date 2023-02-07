@@ -31,7 +31,7 @@
 <l>balls.clear()</l>
 <l>ballsUpgradeCoords.clear()</l>
 <c></c>
-<l>*mode := 3</l>
+<l>*mode := 7</l>
 <l>read_image (Image, 'screen.png')</l>
 <l>if (mode == 1) // Money</l>
 <l>    image_to_channels (Image, Images)</l>
@@ -68,7 +68,7 @@
 <l>    reduce_domain (ObjectSelected1, Rectangle1, ImageReduced2)</l>
 <c>    **clear_ncc_model (ModelID)</c>
 <l>    read_ncc_model ('DiamondModel', ModelID)</l>
-<l>    find_ncc_model (ImageReduced2, ModelID, 0, 0.79, 0.8, 1, 0.5, 'true', 3, Row1, Column1, Angle, Score)</l>
+<l>    find_ncc_model (ImageReduced2, ModelID, -0.1, 0.2, 0.8, 1, 0.5, 'true', 0, Row1, Column1, Angle, Score)</l>
 <c>    </c>
 <c>    **read_shape_model ('DiamondModel', ModelID)</c>
 <c>    **find_shape_model (ImageReduced2,ModelID , 0, 0, 0.8, 1, 0.5, 'none', 4, 0.9, Row1, Column1, Angle, Score)</c>
@@ -79,15 +79,15 @@
 <c>    </c>
 <c>    **gen_rectangle1 (Rectangle2, Row1 - 40, Column1 - 40, Row1 + 40, Column1 + 40)</c>
 <c>    </c>
-<c>    **draw_rectangle1 (200000, Row1, Column1, Row2, Column2)</c>
-<c>    **gen_rectangle1 (Rectangle2, Row1, Column1, Row2, Column2)</c>
-<c>    **reduce_domain (ObjectSelected1, Rectangle2, ImageReduced3)</c>
-<c>    **dev_clear_window ()</c>
-<c>    **dev_display (ImageReduced3)</c>
-<c>    **create_ncc_model (ImageReduced3, 'auto', -3.14, 6.29, 0.0175, 'use_polarity', ModelID)</c>
-<c>    **write_ncc_model (ModelID, 'DiamondModel')</c>
-<c>    **create_shape_model (ImageReduced3, 'auto', -0.39, 0.79, 'auto', 'auto', 'use_polarity', 'auto', 'auto', ModelID)</c>
-<c>    **write_shape_model (ModelID, 'DiamondModel')</c>
+<l>    *draw_rectangle1 (200000, Row1, Column1, Row2, Column2)</l>
+<l>    *gen_rectangle1 (Rectangle2, Row1, Column1, Row2, Column2)</l>
+<l>    *reduce_domain (ObjectSelected1, Rectangle2, ImageReduced3)</l>
+<l>    *dev_clear_window ()</l>
+<l>    *dev_display (ImageReduced3)</l>
+<l>    *create_ncc_model (ImageReduced3, 'auto', -0.1, 0.2, 0.02, 'use_polarity', ModelID)</l>
+<l>    *write_ncc_model (ModelID, 'DiamondModel')</l>
+<l>    *create_shape_model (ImageReduced3, 'auto', -0.39, 0.79, 'auto', 'auto', 'use_polarity', 'auto', 'auto', ModelID)</l>
+<l>    *write_shape_model (ModelID, 'DiamondModel')</l>
 <c>    </c>
 <c>    </c>
 <l>endif</l>
@@ -227,6 +227,24 @@
 <l>    stop ()</l>
 <l>    PrestigeTicks := output</l>
 <c>    </c>
+<l>endif</l>
+<c></c>
+<l>if (mode == 7) // Full Screen Diamond Find</l>
+<l>    image_to_channels (Image, Images2)</l>
+<l>    select_obj (Images2, ObjectSelected1, 3)</l>
+<c>    </c>
+<l>    gen_rectangle1 (Rectangle1, 350, 25, 2280, 1070)</l>
+<l>    reduce_domain (ObjectSelected1, Rectangle1, ImageReduced2)</l>
+<c>    **clear_ncc_model (ModelID)</c>
+<l>    read_ncc_model ('DiamondModel', ModelID)</l>
+<l>    find_ncc_model (ImageReduced2, ModelID, -0.1, 0.2, 0.8, 1, 0.5, 'true', 0, Row1, Column1, Angle, Score)</l>
+<c>    </c>
+<c>    **read_shape_model ('DiamondModel', ModelID)</c>
+<c>    **find_shape_model (ImageReduced2,ModelID , 0, 0, 0.8, 1, 0.5, 'none', 4, 0.9, Row1, Column1, Angle, Score)</c>
+<c>    </c>
+<l>    foundDiamond := [Row1,Column1]</l>
+<c>    </c>
+<l>    clear_ncc_model (ModelID)</l>
 <l>endif</l>
 <c></c>
 <l>dev_clear_window ()</l>
